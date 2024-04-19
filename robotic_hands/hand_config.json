@@ -1,0 +1,64 @@
+{
+    "hands": [
+        {
+            "name": "right_hand",
+            "fingers": [
+                {
+                    "name": "thumb",
+                    "pin": "D3",
+                    "tension": 0
+                },
+                {
+                    "name": "index",
+                    "pin": "D4",
+                    "tension": 0
+                },
+                {
+                    "name": "middle",
+                    "pin": "D5",
+                    "tension": 1
+                },
+                {
+                    "name": "ring",
+                    "pin": "D6",
+                    "tension": 1
+                },
+                {
+                    "name": "pinky",
+                    "pin": "D7",
+                    "tension": 1
+                }
+            ]
+        },
+        {
+            "name": "left_hand",
+            "fingers": [
+                {
+                    "name": "thumb",
+                    "pin": "D10",
+                    "tension": 1
+                },
+                {
+                    "name": "index",
+                    "pin": "D9",
+                    "tension": 1
+                },
+                {
+                    "name": "middle",
+                    "pin": "D13",
+                    "tension": 0
+                },
+                {
+                    "name": "ring",
+                    "pin": "D8",
+                    "tension": 0
+                },
+                {
+                    "name": "pinky",
+                    "pin": "D12",
+                    "tension": 0
+                }
+            ]
+        }
+    ]
+}
