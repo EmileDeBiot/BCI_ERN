@@ -7,6 +7,14 @@ function [hands, config] = init_hands(com)
     % config: hands configuration
 
     % Load the hands configuration
-    hands = arduino(com);
     config = load('hands_config.json');
+
+    % Check if the com port is available
+    if ~isempty(instrfind('Type', 'serial', 'Port', com))
+        fclose(instrfind('Type', 'serial', 'Port', com));
+        delete(instrfind('Type', 'serial', 'Port', com));
+    end
+
+    % Connect to the hands
+    hands = arduino(com);
 end
