@@ -265,7 +265,6 @@ end
 function cbTrainingModel(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossDelay, eArrowDelay, eImaginationDelay, eRestDelay, ePredictionFrequency, bRight, bLeft, bBoth, eFiles, eThreshold, eFile, eThreshold2, eModelFile, eOtherFile)
     data_path = 'data/data/';
     model_path = 'data/models/';
-    result_path = 'data/results/';
     % V�rification
     if strcmp(eFiles.Value, '')
         disp('Aucun fichiers disponibles');
@@ -336,8 +335,6 @@ function cbTrainingModel(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossD
 end
 function cbGetOnlineAccuracy(~, ~, bRight, bLeft, bBoth, eThreshold, eFile)
     data_path = 'data/data/';
-    model_path = 'data/models/';
-    result_path = 'data/results/';
     % V�rification des param�tres
     if get(bRight, 'Value')
         params.testedHand = 'right';
@@ -372,9 +369,7 @@ function cbGetOnlineAccuracy(~, ~, bRight, bLeft, bBoth, eThreshold, eFile)
 end
 
 function cbFeedbackSession(~, ~, eThreshold2, eModelFile, bRight, bLeft, bBoth)
-    data_path = 'data/data/';
     model_path = 'data/models/';
-    result_path = 'data/results/';
     if get(bRight, 'Value')
         params.testedHand = 'right';
     elseif get(bLeft, 'Value')
@@ -404,7 +399,6 @@ end
 function cbUpdate(~, ~, eID, ePreviousModel, bRight, bLeft, bBoth, eFiles, eFile, eModelFile, eOtherFile)
     data_path = 'data/data/';
     model_path = 'data/models/';
-    result_path = 'data/results/';
     params.ID = char(get(eID, 'Value'));
     if isempty(regexp(params.ID, '^P\d+_H[RLB]_T\d+$', 'once'))
         disp('Mauvais format d''[ID]. Suivez le format ''Px_Hy_Tz''');
