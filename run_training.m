@@ -1,6 +1,4 @@
 clear;
-addpath("utils\")
-addpath("robotic_hands\")
 % Valeurs initiales
 params = struct('ID', 'P1_HR_T1', ...
                 'previousModel', '', ...

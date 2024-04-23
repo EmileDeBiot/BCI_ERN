@@ -1,8 +1,7 @@
-function test_hands(com)
-    % Test the robotic hand
-    % com: usb port to communicate with the robotic hand
+function test_hands()
+    % Test the robotic hands
 
-    [hands, config] = init_hands(com);
+    [hands, config] = init_hands();
     for i = 1:length(config.hands)
         hand = config.hands(i);
         for j = 1:length(hand.fingers)
