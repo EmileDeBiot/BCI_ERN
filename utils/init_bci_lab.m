@@ -11,5 +11,4 @@ function init_bci_lab()
     else 
         disp('BCILAB already loaded!')
     end
-    addpath('Robotic_hand')
 end
