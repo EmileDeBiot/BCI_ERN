@@ -1,0 +1,3 @@
+[submodule "BCILAB"]
+	path = BCILAB
+	url = https://github.com/sccn/BCILAB.git
