@@ -156,7 +156,7 @@ for BLOCK=1
             Screen('Flip', w);
             WaitSecs(1);
             OUTCOME='ToucheDroite_Bad';
-            marker_outlet.push_sample({num2str(55)});; %% TRIGGER EEG
+            marker_outlet.push_sample({num2str(55)}); %% TRIGGER EEG
         end
         
         %% Fixation cross %%
