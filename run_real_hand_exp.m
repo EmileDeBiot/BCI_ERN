@@ -4,6 +4,8 @@ delete(instrfind);
 clear all % supprime toutes les variabls creees precedemment
 close all % ferme toutes les fenetres ouvertes precedemment
 
+task = 'bandits';
+
 result_path = 'data/results/';
 resource_path = 'data/resources/';
 cap = 64; % 32 or 64
@@ -83,15 +85,31 @@ for BLOCK=1
     
     %% Liste avec alternance entre Outcome 1 et 2 (réponse correct ou incorrect, à gauche ou à droite)
     %% 1=réponse correcte / 2 = réponse incorrecte
-    mapping=[1,2];
-    mapping_number=repmat(mapping,1,60);
-    order=randperm(60);
-    mapping_number=mapping_number(order);
-    mapping_list=[mapping_number];
-    nMapping=(mapping_list);
-    
-    ListEXPE = [ITI; mapping_list];
-    nEXPE=length(ListEXPE);
+    if strcmp(task, 'bandits')
+        ListEXPE = [ITI; bandits()];
+    else
+        mapping=[1,2];
+        mapping_number=repmat(mapping,1,60);
+        order=randperm(60);
+        mapping_number=mapping_number(order);
+        mapping_list=[mapping_number];
+        nMapping=(mapping_list);
+        is_success = zeros(2, 60);
+        for i = 1:60
+            if mapping_list(i) == 1
+                is_success(1, i) = 1;
+            else
+                is_success(1, i) = 0;
+            end
+            if mapping_list(i) == 2
+                is_success(2, i) = 1;
+            else
+                is_success(2, i) = 0;
+            end
+        end
+        ListEXPE = [ITI; is_success];
+        nEXPE=length(ListEXPE);
+    end
     
     for k=1:10%length(ListEXPE(1,:))
         
@@ -133,25 +151,25 @@ for BLOCK=1
         %% Outcome %%
         
 
-        if strcmp(KbName(keyCode),'x') && ListEXPE(2,k)==1
+        if strcmp(KbName(keyCode),'x') && ListEXPE(2,k,1)==1
             Screen('Putimage', w, Good_1);
             Screen('Flip', w);
             WaitSecs(1);
             OUTCOME= 'ToucheGauche_Good';
             marker_outlet.push_sample({num2str(20)}); %% TRIGGER EEG
-        elseif strcmp(KbName(keyCode),'x') && ListEXPE(2,k)==2
+        elseif strcmp(KbName(keyCode),'x') && ListEXPE(2,k,1)==0
             Screen('Putimage', w, Bad_1);
             Screen('Flip', w);
             WaitSecs(1);
             OUTCOME='ToucheGauche_Bad';
             marker_outlet.push_sample({num2str(50)}); %% TRIGGER EEG
-        elseif strcmp(KbName(keyCode),'n') && ListEXPE(2,k)==1
+        elseif strcmp(KbName(keyCode),'n') && ListEXPE(2,k,2)==1
             Screen('Putimage', w, Good_2);
             Screen('Flip', w);
             WaitSecs(1);
             OUTCOME='ToucheDroite_Good';
             marker_outlet.push_sample({num2str(22)}); %% TRIGGER EEG
-        elseif strcmp(KbName(keyCode),'n') && ListEXPE(2,k)==2
+        elseif strcmp(KbName(keyCode),'n') && ListEXPE(2,k,2)==0
             Screen('Putimage', w, Bad_2);
             Screen('Flip', w);
             WaitSecs(1);
