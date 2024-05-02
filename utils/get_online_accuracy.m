@@ -1,77 +1,77 @@
-function get_online_accuracy(markers, threshold, file)
+function get_online_accuracy(markers, threshold, data_file, model_file)
     % get_online_accuracy: Get the accuracy of the online prediction
     %   markers: The markers to use
     %   threshold: The threshold for the feedback
     %   file: The file containing the data
     data_path = 'data/data/';
+    model_path = 'data/models/';
     
+    disp(model_file)
     thresholds = [0 threshold 1];
-    init_bci();
-    data = exp_eval(io_loadset(strcat(data_path,file,'.xdf')));
-    streams = load_xdf(env_translatepath(strcat(data_path,file,'.xdf')));
-    
-    for i = 1:length(streams)
-        if strcmp(streams{i}.info.type,'MentalState')
-            prediction = streams{i}.time_series;
-            prediction_latencies = streams{i}.time_stamps;
-        end
-    end
+    init_bci_lab();
+    data = exp_eval(io_loadset(strcat(data_path,data_file,'.xdf')));
+    model = utl_loadmodel(strcat(model_path, model_file, '.mat'));
+    [predictions,loss,stats,targets] = bci_predict(model, data, 'Format', 'mode');
 
-    prediction = prediction - 1;
-    prediction_processed = prediction;
-    state = 0;
-    
-    %courbe noire
-    for i = 2:length(prediction_processed)           
-        if ~state && prediction_processed(i) >=  thresholds(3)
-            state = ~state;
-            prediction_processed(i) = 1;
-        elseif state && prediction_processed(i) <= thresholds(1)
-            state = ~state;
-            prediction_processed(i) = 0;
-        else
-            prediction_processed(i) = prediction_processed(i-1);
-        end
-    end
-    targets = zeros(1,data.pnts);
+    % Compute confusion matrix and F1 score
+    confusion_matrix = confusionmat(targets, predictions);
+    statsOfMeasure(confusion_matrix,1);
 
-    %courbe rouge
-    for i = 1:length(data.event)
-        if strcmp(data.event(i).type, markers(2))
-            targets(round(data.event(i).latency):end) = 1;
-        else
-            targets(round(data.event(i).latency):end) = 0;
-        end
-    end
+end
 
-    prediction_lat = round((prediction_latencies-str2double(streams{3}.info.first_timestamp))*data.srate);        
-    try 
-        targets = targets(prediction_lat);
-    catch
-        targets = targets(prediction_lat(find(prediction_lat>0,1):end));
-        prediction = prediction(find(prediction_lat>0,1):end);
-        prediction_processed = prediction_processed(find(prediction_lat>0,1):end);
-        warning('First %d negative timestamp(s) was/were removed', find(prediction_lat>0,1)-1);
-    end
-    cd BCILAB-master\BCILAB-master\dependencies\eeglab_10_0_1_0x\plugins\Biosig3.1.0;
-    biosig_installer;
-    k = kappa(round(targets),round(prediction));
-    c = xcorr(targets,prediction);
-    delay = min(abs(find(c==max(c))-length(prediction)))*mean(diff(prediction_latencies));
-    k_processed = kappa(round(targets),round(prediction_processed));
-    c_processed = xcorr(targets,prediction);
-    delay_processed = min(abs(find(c_processed==max(c_processed))-length(prediction_processed)))*mean(diff(prediction_latencies));
-    cd ../../../../../..;
-    p = which('kappa');
-    rmpath(genpath(p(1:end-17)));
-    disp('Raw: ')
-    disp(['    Accuracy: ',num2str(k.ACC)]);
-    disp(['    Delay: ',num2str(delay)]);
-    disp(['    Number of activation: ',num2str(length(find(diff(round(prediction))==1)))]);
-    disp('Processed: ')
-    disp(['    Accuracy: ',num2str(k_processed.ACC)]);
-    disp(['    Delay: ',num2str(delay_processed)]);
-    disp(['    Number of activation: ',num2str(length(find(diff(round(prediction_processed))==1)))]);
-    figure;
-    plot(1:length(targets),targets,'r',1:length(targets),prediction,'b',1:length(targets),prediction_processed,'k');
+function [stats] = statsOfMeasure(confusion, verbatim)
+% The input 'confusion' is the the output of the Matlab function
+% 'confusionmat'
+% if 'verbatim' = 1; output the generated table in the command window
+% confusion: 3x3 confusion matrix
+tp = [];
+fp = [];
+fn = [];
+tn = [];
+len = size(confusion, 1);
+for k = 1:len                  %  predict
+    % True positives           % | x o o |
+    tp_value = confusion(k,k); % | o o o | true
+    tp = [tp, tp_value];       % | o o o |
+                                               %  predict
+    % False positives                          % | o o o |
+    fp_value = sum(confusion(:,k)) - tp_value; % | x o o | true
+    fp = [fp, fp_value];                       % | x o o |
+                                               %  predict
+    % False negatives                          % | o x x |
+    fn_value = sum(confusion(k,:)) - tp_value; % | o o o | true
+    fn = [fn, fn_value];                       % | o o o |
+                                                                       %  predict
+    % True negatives (all the rest)                                    % | o o o |
+    tn_value = sum(sum(confusion)) - (tp_value + fp_value + fn_value); % | o x x | true
+    tn = [tn, tn_value];                                               % | o x x |
+end
+% Statistics of interest for confusion matrix
+prec = tp ./ (tp + fp); % precision
+sens = tp ./ (tp + fn); % sensitivity, recall
+spec = tn ./ (tn + fp); % specificity
+acc = sum(tp) ./ sum(sum(confusion));
+f1 = (2 .* prec .* sens) ./ (prec + sens);
+% For micro-average
+microprec = sum(tp) ./ (sum(tp) + sum(fp)); % precision
+microsens = sum(tp) ./ (sum(tp) + sum(fn)); % sensitivity, recall
+microspec = sum(tn) ./ (sum(tn) + sum(fp)); % specificity
+microacc = acc;
+microf1 = (2 .* microprec .* microsens) ./ (microprec + microsens);
+% Names of the rows
+name = ["true_positive"; "false_positive"; "false_negative"; "true_negative"; ...
+    "precision"; "sensitivity"; "specificity"; "accuracy"; "F-measure"];
+% Names of the columns
+varNames = ["name"; "classes"; "macroAVG"; "microAVG"];
+% Values of the columns for each class
+values = [tp; fp; fn; tn; prec; sens; spec; repmat(acc, 1, len); f1];
+% Macro-average
+macroAVG = mean(values, 2);
+% Micro-average
+microAVG = [macroAVG(1:4); microprec; microsens; microspec; microacc; microf1];
+% OUTPUT: final table
+stats = table(name, values, macroAVG, microAVG, 'VariableNames',varNames);
+if verbatim
+    stats
+end
 end

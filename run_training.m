@@ -111,6 +111,7 @@ function open_window_1(params)
 
     bGetOnlineAccuracy = uibutton(f, 'push', 'Text', 'Get Online Accuracy', 'Position', [480, 5, 120, 20]);
     set(bGetOnlineAccuracy, 'ButtonPushedFcn', {@cbGetOnlineAccuracy, ...
+                                                 ePreviousModel, ...
                                                  bRight, bLeft, bBoth, ...
                                                  eThreshold, ...
                                                  eFile});
@@ -331,7 +332,7 @@ function cbTrainingModel(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossD
     
     open_window_1(params);
 end
-function cbGetOnlineAccuracy(~, ~, bRight, bLeft, bBoth, eThreshold, eFile)
+function cbGetOnlineAccuracy(~, ~, ePreviousModel, bRight, bLeft, bBoth, eThreshold, eFile)
     data_path = 'data/data/';
     % V�rification des param�tres
     if get(bRight, 'Value')
@@ -341,6 +342,7 @@ function cbGetOnlineAccuracy(~, ~, bRight, bLeft, bBoth, eThreshold, eFile)
     elseif get(bBoth, 'Value')
         params.testedHand = 'both';
     end
+
     
     num = str2double(get(eThreshold, 'Value'));
     if isnan(num) || ~isnumeric(num) || num < 0 || num > 1
@@ -355,6 +357,7 @@ function cbGetOnlineAccuracy(~, ~, bRight, bLeft, bBoth, eThreshold, eFile)
         disp('Fichier introuvable');
         return;
     end
+    params.modelFile = char(get(ePreviousModel, 'Value'));
 
     disp('Get Online Accuracy');
     if strcmp(params.testedHand, 'both')
@@ -363,7 +366,7 @@ function cbGetOnlineAccuracy(~, ~, bRight, bLeft, bBoth, eThreshold, eFile)
         markers = {'cross',params.testedHand};
     end
     
-    get_online_accuracy(markers, params.threshold, params.file);
+    get_online_accuracy(markers, params.threshold, params.file, params.modelFile);
 end
 
 function cbFeedbackSession(~, ~, eThreshold2, eModelFile, bRight, bLeft, bBoth)
