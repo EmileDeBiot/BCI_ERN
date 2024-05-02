@@ -3,10 +3,11 @@ function training_model(testedHand, files)
     %   testedHand: The hand to test
     %   files: The files to train the model with
     data_path = 'data/data/';
+    resource_path = 'data/resources/';
     model_path = 'data/models/';
 
     if strcmp(testedHand, 'both')
-        markers = {'left', 'right'};
+        markers = {'left', 'right', 'rest'};
     elseif strcmp(testedHand, 'right')
         markers = {'cross','right'};
     elseif strcmp(testedHand, 'left')
@@ -19,7 +20,7 @@ function training_model(testedHand, files)
     %% Init
 
     % load BCILAB
-    init_bci;
+    init_bci_lab;
 
     %% Channels
     biosemi_cfg = 64;
@@ -28,7 +29,7 @@ function training_model(testedHand, files)
     % {'C5','C3','C1','C2','C4','C6','Cz','FC5','FC3','FC1','FC2','FC4','FC6','FCz','F5','F3','F1','F2','F4','F6','Fz','CP5','CP3','CP1','CP2','CP4','CP6','CPz','P5','P3','P1','P2','P4','P6','Pz'};
     % {'C5','C3','C1','C2','C4','C6','Cz','FC5','FC3','FC1','FC2','FC4','FC6','FCz','CP5','CP3','CP1','CP2','CP4','CP6','CPz'};
 
-    chan_file = load('Biosemi_channels.mat');
+    chan_file = load(strcat(resource_path, 'Biosemi_channels.mat'));
     chan_names = getfield(chan_file,strcat('biosemi',num2str(biosemi_cfg)));
     biosemi_channels = fieldnames(chan_names);
     if select_all_channel
@@ -80,25 +81,19 @@ function training_model(testedHand, files)
         end
     end
 
-    % window parameters, results are computed for windows of length
-    % "windowlength", taken at steps "step" in the range "bounds" with respect
-    % to the markers
-    windowlength = 1;
-    step = 0.2;
-    bounds = [0 3];
     approach = {'FBCSP', ...
         'SignalProcessing',{ ...
         'Resampling','off', ...{'SamplingRate',128}, ...
         'ChannelSelection',{'Channels',selected_channels}, ...
         'Rereferencing',{'ReferenceChannels',{'EX1','EX2'},'KeepReference',false}, ...
         'FIRFilter','off', ...
-        'EpochExtraction',{'TimeWindow',[search(0.25:0.1:0.75),search(1.5:0.5:4.5)]}, ... % using search to find the best window
+        'EpochExtraction',{'TimeWindow',[search(0.25:0.2:0.75),search(1.5:1.0:4.5)]}, ... % using search to find the best window
         }, ...
         'Prediction',{ ...
         'FeatureExtraction',{'PatternPairs',1,'FreqWindows',[8 12;13 30],'WindowFunction','rect'}, ...
         'MachineLearning',{'Learner',{'lda','WeightedBias',true,'WeightedCov',true}}} ...
         };
-    [trainloss,model,stats] = bci_train(data,approach,markers,windowlength,step);
+    [trainloss,model,stats] = bci_train('Data',data, 'Approach', approach, 'TargetMarkers',markers);
     disp(['training mis-classification rate: ' num2str(trainloss*100,3) '%']);
     bci_visualize(model,'patterns',true,'weight_scaled',true)
     io_save(strcat(model_path,files{end},'_model'),'trainloss','model','stats');
