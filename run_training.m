@@ -366,7 +366,7 @@ function cbGetOnlineAccuracy(~, ~, ePreviousModel, bRight, bLeft, bBoth, eThresh
         markers = {'cross',params.testedHand};
     end
     
-    get_online_accuracy(markers, params.threshold, params.file, params.modelFile);
+    get_online_accuracy(markers, params.file, params.modelFile);
 end
 
 function cbFeedbackSession(~, ~, eThreshold2, eModelFile, bRight, bLeft, bBoth)

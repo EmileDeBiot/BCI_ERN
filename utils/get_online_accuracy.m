@@ -1,4 +1,4 @@
-function get_online_accuracy(markers, threshold, data_file, model_file)
+function get_online_accuracy(markers, data_file, model_file)
     % get_online_accuracy: Get the accuracy of the online prediction
     %   markers: The markers to use
     %   threshold: The threshold for the feedback

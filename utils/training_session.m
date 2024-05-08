@@ -50,8 +50,6 @@ function training_session(previousModel, testedHand, nbTrialsPerHand, crossDelay
         model = model_file.model;
         run_readlsl('MatlabStream','BioSemi','DataStreamQuery','name=''BioSemi''','MarkerStreamQuery',['']);
         run_writelsl('Model',model,'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','expectation','UpdateFrequency',predictionFrequency);
-        
-        
     end
 
     %% Visualization

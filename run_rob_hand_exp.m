@@ -74,7 +74,7 @@ disp('Initializing the robotic hands...')
 
 disp('Initializing marker stream...')
 info = lsl_streaminfo(LibHandle,'MyMarkerStream','Markers',1,0,'cf_string','myuniquesourceid23443');
-marker_outlet = lsl_outlet(info);
+trigger_outlet = lsl_outlet(info);
 
 
 %% Port EEG
@@ -211,25 +211,25 @@ for BLOCK=1
             Screen('Flip', w);
             WaitSecs(1);
             OUTCOME= 'ToucheGauche_Good';
-            marker_outlet.push_sample({num2str(120)}); %% TRIGGER EEG
+            trigger_outlet.push_sample({num2str(120)}); %% TRIGGER EEG
         elseif strcmp(KbName(keyCode),'x') && ListEXPE(2,k,1)==0
             Screen('Putimage', w, Bad_1);
             Screen('Flip', w);
             WaitSecs(1);
             OUTCOME='ToucheGauche_Bad';
-            marker_outlet.push_sample({num2str(150)}); %% TRIGGER EEG
+            trigger_outlet.push_sample({num2str(150)}); %% TRIGGER EEG
         elseif strcmp(KbName(keyCode),'n') && ListEXPE(2,k,2)==1
             Screen('Putimage', w, Good_2);
             Screen('Flip', w);
             WaitSecs(1);
             OUTCOME='ToucheDroite_Good';
-            marker_outlet.push_sample({num2str(122)}); %% TRIGGER EEG
+            trigger_outlet.push_sample({num2str(122)}); %% TRIGGER EEG
         elseif strcmp(KbName(keyCode),'n') && ListEXPE(2,k,2)==0
             Screen('Putimage', w, Bad_2);
             Screen('Flip', w);
             WaitSecs(1);
             OUTCOME='ToucheDroite_Bad';
-            marker_outlet.push_sample({num2str(155)}); %% TRIGGER EEG
+            trigger_outlet.push_sample({num2str(155)}); %% TRIGGER EEG
         end
         
         %% Fixation cross %%
