@@ -11,6 +11,7 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
     % - show_feedback_to_user: boolean, whether to show the feedback to the user
     % - prediction_frequency: integer, the frequency at which the prediction is made
     global_model_file = 'global_model';
+    data_path = 'data/data/';
     model_path = 'data/models/';
 
     % Check input
@@ -33,11 +34,11 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
     info = lsl_streaminfo(LibHandle,'MyMarkerStream','Markers',1,0,'cf_string','myuniquesourceid23443');
     marker_outlet = lsl_outlet(info);
     if show_feedback_to_user
-        hands = init_hands();
+        [hands, config] = init_hands('COM12');
         global_file = io_load(strcat(model_path,global_model_file));
         [result_outlet,  opts] = init_outlet_global('GlobalModel',global_file.model, 'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','expectation','UpdateFrequency',prediction_frequency)
         onl_write_background(...
-            'ResultWriter',@(y)action(hands, y, result_outlet),...
+            'ResultWriter',@(y)activate(hands, config, result_outlet, y),...
             'MatlabStream',opts.in_stream, ...
             'Model',global_file.model, ...
             'OutputFormat',opts.out_form, ...
@@ -118,16 +119,11 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
         [secs, keyCode, deltaSecs] = KbWait; 
     end
     
-    
-
     % What we want to do is to simulate nb_trials_per_marker for each hand
     % and label 'rest' the rest of the signal
 
     while trial<=length(trials)
-        % Activate fingers (servomotors)
-        if show_feedback_to_user
-            activate(hands);
-        end
+
         if length(cross_delay) == 2
             delay = randi(cross_delay)/1000;
         else
@@ -194,10 +190,6 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
         % Nothing
         
         marker_outlet.push_sample({'pause'});
-        if show_feedback_to_user
-            deactivate(hands);
-        end
-        
         if length(rest_delay) == 2
             delay = randi(rest_delay)/1000;
         else

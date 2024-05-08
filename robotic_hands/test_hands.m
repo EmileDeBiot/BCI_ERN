@@ -1,7 +1,12 @@
 function test_hands()
     % Test the robotic hands
 
-    [hands, config] = init_hands();
+    config = readstruct('hands_config.json');
+    com = config.port;
+
+    % Connect to the hands
+    hands = arduino(com);
+    
     for i = 1:length(config.hands)
         hand = config.hands(i);
         for j = 1:length(hand.fingers)

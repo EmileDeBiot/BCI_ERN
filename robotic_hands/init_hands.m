@@ -1,15 +1,15 @@
-function [hands, config] = init_hands()
+function hands = init_hands()
     % Initialize the robotic hands
-    % com: COM port to connect to the hands
     % 
     % Returns:
     % hands: arduino object
-    % config: hands configuration
 
     % Load the hands configuration
     config = readstruct('hands_config.json');
     com = config.port;
+    baudrate = config.baudrate;
 
     % Connect to the hands
-    hands = arduino(com);
+    hands = serialport(com, baudrate);
+    disp(read(hands, 50, "char"));
 end

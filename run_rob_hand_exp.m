@@ -57,7 +57,7 @@ disp("Starting the outlet...")
 
 
 disp('Initializing the robotic hands...')
-[hands, config] = init_hands('COM12');
+hands = init_hands();
 
 disp('Initializing marker stream...')
 info = lsl_streaminfo(LibHandle,'MyMarkerStream','Markers',1,0,'cf_string','myuniquesourceid23443');
@@ -103,7 +103,7 @@ KbName('UnifyKeyNames');
 % lancer les pr�dicitons 
 
 onl_write_background( ...
-    'ResultWriter',@(y)send_samples_global(eeg_outlet, hands, config, y),...
+    'ResultWriter',@(y)send_samples_global(eeg_outlet, hands, y),...
     'MatlabStream',opts.in_stream, ...
     'Model',global_file.model, ...
     'OutputFormat',opts.out_form, ...
@@ -164,7 +164,7 @@ for BLOCK=1
                 break;
             end
         end
-
+        activate(hands);
         WaitSecs(1);
 
         Screen('Putimage', w, Action);
@@ -211,6 +211,7 @@ for BLOCK=1
         Screen('Flip', w);
         WaitSecs(ListEXPE(1,k));
         
+        deactivate(hands);
         %% Feeling in control %%
         %replyControle = Ask(w,'Le mouvement observ� �tait d� � ma propre volont� (R�ponse de 0 � 10): ', white, grey, 'GetChar',[150, 550, 200, 300],[],22);
         Screen('Putimage', w, Controle);
@@ -256,16 +257,16 @@ end
 
 Screen('CloseAll');
 
-function send_samples_global(outlet, hands, config,y)
+function send_samples_global(outlet, hands, y)
     if ~isempty(y)
         outlet.push_chunk(y');
         if y == 2
             disp('Right hand activated');
-            activate(hands, config, 'right', 2);
+            action(hands,2, outlet);
         end
         if y == 1
             disp('Left hand activated');
-            activate(hands, config, 'left', 2);
+            activate(hands, 2, outlet);
         end
         if y == 3
             disp('Resting');
