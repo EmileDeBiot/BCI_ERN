@@ -9,13 +9,13 @@ function training_model(testedHand, files)
     if strcmp(testedHand, 'both')
         markers = {'left', 'right', 'rest'};
     elseif strcmp(testedHand, 'right')
-        markers = {'cross','right'};
+        markers = {'rest','right'};
     elseif strcmp(testedHand, 'left')
-        markers = {'cross','left'};
+        markers = {'rest','left'};
     end
     
     select_all_channel = false;
-    artifact_correction = false;
+    artifact_correction = true;
 
     %% Init
 
@@ -87,12 +87,21 @@ function training_model(testedHand, files)
         'ChannelSelection',{'Channels',selected_channels}, ...
         'Rereferencing',{'ReferenceChannels',{'EX1','EX2'},'KeepReference',false}, ...
         'FIRFilter','off', ...
-        'EpochExtraction',{'TimeWindow',[search(0.25:0.2:0.75),search(1.5:1.0:4.5)]}, ... % using search to find the best window
+        'EpochExtraction',{'TimeWindow',[search(0.25:0.2:0.75),search(1.5:1.5:4.5)]}, ... % using search to find the best window
         }, ...
         'Prediction',{ ...
         'FeatureExtraction',{'PatternPairs',1,'FreqWindows',[8 12;13 30],'WindowFunction','rect'}, ...
         'MachineLearning',{'Learner',{'lda','WeightedBias',true,'WeightedCov',true}}} ...
         };
+
+    % Insert rest markers for the training
+    % Label rest the duration between the cross and the beginning of the arrow
+    set_insert_markers(data, 'SegmentSpec',{'cross',0,0,'left'},'Event','rest')
+    set_insert_markers(data, 'SegmentSpec',{'cross',0,0,'right'},'Event','rest')
+
+    % Label rest the duration between the end of the arrow and the pause
+    set_insert_markers(data, 'SegmentSpec',{'imagery',0.2,0,'pause'},'Event','rest')
+
     [trainloss,model,stats] = bci_train('Data',data, 'Approach', approach, 'TargetMarkers',markers);
     disp(['training mis-classification rate: ' num2str(trainloss*100,3) '%']);
     bci_visualize(model,'patterns',true,'weight_scaled',true)
