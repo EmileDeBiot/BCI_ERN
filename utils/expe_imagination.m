@@ -10,7 +10,9 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
     % - LibHandle: the handle to the LSL library
     % - show_feedback_to_user: boolean, whether to show the feedback to the user
     % - prediction_frequency: integer, the frequency at which the prediction is made
-    
+    global_model_file = 'global_model';
+    model_path = 'data/models/';
+
     % Check input
     rest_class = false;
     for i = 1:length(markers)
@@ -29,13 +31,24 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
 
     % LSL
     info = lsl_streaminfo(LibHandle,'MyMarkerStream','Markers',1,0,'cf_string','myuniquesourceid23443');
-    outlet = lsl_outlet(info);
+    marker_outlet = lsl_outlet(info);
     if show_feedback_to_user
-        feedback_expe = lsl_resolve_byprop(LibHandle,'name','BCI');
-        inlet = lsl_inlet(feedback_expe{1});
-        inlet.pull_sample(1/prediction_frequency/10); % first pull always fails -> better here with a timeout
+        [hands, config] = init_hands('COM12');
+        global_file = io_load(strcat(model_path,global_model_file));
+        [result_outlet,  opts] = init_outlet_global('GlobalModel',global_file.model, 'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','expectation','UpdateFrequency',prediction_frequency)
+        onl_write_background(...
+            'ResultWriter',@(y)activate(hands, config, result_outlet, y),...
+            'MatlabStream',opts.in_stream, ...
+            'Model',global_file.model, ...
+            'OutputFormat',opts.out_form, ...
+            'UpdateFrequency',opts.update_freq, ...
+            'PredictorName',opts.pred_name, ...
+            'PredictAt',opts.predict_at, ...
+            'Verbose',opts.verbose, ...
+            'StartDelay',0,...
+            'EmptyResultValue',[]);
     end
-        
+
     % Graphics settings
     
     % Here we call some default settings for setting up Psychtoolbox
@@ -95,7 +108,7 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
     trials = repmat(markers,1,nbtrials_per_marker);
     trials = trials(randperm(length(trials)));
 
-%     vbl = Screen('Flip', window);
+    % vbl = Screen('Flip', window);
     trial = 1;
     
     DrawFormattedText(window, 'Ready?', 'center', 'center', [54,54,54]);
@@ -105,102 +118,63 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
         [secs, keyCode, deltaSecs] = KbWait; 
     end
     
+    % What we want to do is to simulate nb_trials_per_marker for each hand
+    % and label 'rest' the rest of the signal
+
     while trial<=length(trials)
 
         if length(cross_delay) == 2
             delay = randi(cross_delay)/1000;
         else
-            delay = cross_delay/1000;            
+            delay = cross_delay/1000;
         end
         timerVal1 = tic;
         
-        outlet.push_sample({'cross'});
+        marker_outlet.push_sample({'cross'});
 
+        % Display fixation cross
         while toc(timerVal1) < delay
-            if show_feedback_to_user
-                bci_output = [];
-                while toc(timerVal1)<delay && isempty(bci_output)
-                    bci_output = inlet.pull_sample(1/prediction_frequency/10);
-                end
-                if isempty(bci_output)
-                    bci_output = bci_output_old;
-                else
-                    bci_output_old = bci_output;
-                end
-                Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
-                feedback_RectVector = [xCenter, xCenter, xCenter + (bci_output-(nb_classes-1))*Length, xCenter + (bci_output-(nb_classes-1))*Length; ...
-                              yCenter - Width/2/4, yCenter + Width/2/4, yCenter + Width/2/4, yCenter - Width/2/4];
-                Screen('FillPoly', window, feedbackColor, feedback_RectVector', isConvex);            
-                Screen('Flip', window);
-            else
-                Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
-                Screen('Flip', window);
-            end
+            Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
+            Screen('Flip', window);
         end
         
 
-        % Fixation cross + Arrow
+        % Displaying Fixation cross + Arrow
         Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
-        if  strcmp(trials(trial),'rest')
-            RectVector = [xCenter + Width/2, xCenter + Width/2, xCenter - Width/2, xCenter - Width/2; ...
-                          yCenter, yCenter + Length, yCenter + Length, yCenter];
-            TriangleVector = [xCenter + 1.5*Width/2, xCenter, xCenter - 1.5*Width/2; ...
-                          yCenter + Length, yCenter + 1.2*Length, yCenter + Length, ];
-        elseif  strcmp(trials(trial),'right')
+
+        if  strcmp(trials(trial),'right')
             RectVector = [xCenter , xCenter + Length, xCenter + Length, xCenter; ...
                           yCenter - Width/2, yCenter - Width/2, yCenter + Width/2, yCenter + Width/2];
             TriangleVector = [xCenter + Length, xCenter + 1.2*Length, xCenter + Length; ...
                           yCenter - 1.5*Width/2, yCenter, yCenter + 1.5*Width/2];
-        elseif  strcmp(trials(trial),'left')
+        else
             RectVector = [xCenter - Length , xCenter, xCenter, xCenter - Length; ...
                           yCenter - Width/2, yCenter - Width/2, yCenter + Width/2, yCenter + Width/2];
             TriangleVector = [xCenter - Length, xCenter - 1.2*Length, xCenter - Length; ...
                           yCenter - 1.5*Width/2, yCenter, yCenter + 1.5*Width/2];
-        elseif  strcmp(trials(trial),'tongue')
-            RectVector = [xCenter + Width/2, xCenter + Width/2, xCenter - Width/2, xCenter - Width/2; ...
-                          yCenter, yCenter - Length, yCenter - Length, yCenter];
-            TriangleVector = [xCenter + 1.5*Width/2, xCenter, xCenter - 1.5*Width/2; ...
-                          yCenter - Length, yCenter - 1.2*Length, yCenter - Length, ];
         end
         
         marker = trials(trial);
-        outlet.push_sample(marker);
+        marker_outlet.push_sample(marker);
 
         if length(arrow_delay) == 2
             delay = randi(arrow_delay)/1000;
         else
             delay = arrow_delay/1000;
         end
+
         timerVal1 = tic;
+        % Draw the arrow
         while toc(timerVal1) < delay
-            if show_feedback_to_user
-                Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
-                Screen('FillPoly', window, rectColor, RectVector', isConvex);
-                Screen('FillPoly', window, rectColor, TriangleVector', isConvex);
-                bci_output = [];
-                while toc(timerVal1)<delay && isempty(bci_output)
-                    bci_output = inlet.pull_sample(1/prediction_frequency/10);
-                end
-                if isempty(bci_output)
-                    bci_output = bci_output_old;
-                else
-                    bci_output_old = bci_output;
-                end
-                feedback_RectVector = [xCenter, xCenter, xCenter + (bci_output-(nb_classes-1))*Length, xCenter + (bci_output-(nb_classes-1))*Length; ...
-                              yCenter - Width/2/4, yCenter + Width/2/4, yCenter + Width/2/4, yCenter - Width/2/4];
-                Screen('FillPoly', window, feedbackColor, feedback_RectVector', isConvex);            
-                Screen('Flip', window);
-            else
-                Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
-                Screen('FillPoly', window, rectColor, RectVector', isConvex);
-                Screen('FillPoly', window, rectColor, TriangleVector', isConvex);
-                Screen('Flip', window);
-            end
+            Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
+            Screen('FillPoly', window, rectColor, RectVector', isConvex);
+            Screen('FillPoly', window, rectColor, TriangleVector', isConvex);
+            Screen('Flip', window);
         end
 
         % Fixation cross
         
-        outlet.push_sample({'imagery'});
+        marker_outlet.push_sample({'imagery'});
         if length(imagination_delay) == 2
             delay = randi(imagination_delay)/1000;
         else
@@ -208,31 +182,13 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
         end
         timerVal1 = tic;
         while toc(timerVal1) < delay
-            if show_feedback_to_user
-                bci_output = [];
-                while toc(timerVal1)<delay && isempty(bci_output)
-                    bci_output = inlet.pull_sample(1/prediction_frequency/10);
-                end
-                if isempty(bci_output)
-                    bci_output = bci_output_old;
-                else
-                    bci_output_old = bci_output;
-                end
-                Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
-                Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
-                feedback_RectVector = [xCenter, xCenter, xCenter + (bci_output-(nb_classes-1))*Length, xCenter + (bci_output-(nb_classes-1))*Length; ...
-                              yCenter - Width/2/4, yCenter + Width/2/4, yCenter + Width/2/4, yCenter - Width/2/4];
-                Screen('FillPoly', window, feedbackColor, feedback_RectVector', isConvex);            
-                Screen('Flip', window);
-            else
-                Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
-                Screen('Flip', window);
-            end
+            Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
+            Screen('Flip', window);
         end
 
         % Nothing
         
-        outlet.push_sample({'pause'});
+        marker_outlet.push_sample({'pause'});
         if length(rest_delay) == 2
             delay = randi(rest_delay)/1000;
         else
@@ -250,4 +206,5 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
         disp(trial);
     end
     Screen('CloseAll');
+
 end

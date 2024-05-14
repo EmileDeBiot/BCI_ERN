@@ -22,7 +22,7 @@ function training_session(previousModel, testedHand, nbTrialsPerHand, crossDelay
     %% Init
 
     % load BCILAB
-    init_bci;
+    init_bci_lab;
 
     % Open Biosemi to LSL connection
     LibHandle = lsl_loadlib();

@@ -4,19 +4,14 @@ clear  % supprime toutes les variabls creees precedemment
 close all % ferme toutes les fenetres ouvertes precedemment
 
 task = 'bandits';
-both = true;
 
 data_path = 'data/data/';
 model_path = 'data/models/';
 result_path = 'data/results/';
 resource_path = 'data/resources/';
 
-if both
-    global_model_file = 'global_model';
-else
-    left_model_file = 'left_test_model';
-    right_model_file = 'right_test_model';
-end
+
+global_model_file = 'global_model';
 
 threshold = 0.5;
 
@@ -53,19 +48,11 @@ vis_stream('BioSemi',10,5,150,1:1+cap+8,100,10);
 
 %% Loading files
 disp('Loading models...')
-if both
-    global_file = io_load(strcat(model_path,global_model_file));
-    disp("Starting the outlet...")
-    [eeg_outlet,  opts] = init_outlet_global('GlobalModel',global_file.model, 'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','expectation','UpdateFrequency',prediction_frequency)
-else
-    left_file = io_load(strcat(model_path,left_model_file));
-    left_model = left_file.model;
 
-    right_file = io_load(strcat(model_path,right_model_file));
-    right_model = right_file.model;
-    disp('Starting the outlet...')
-    [eeg_outlet,  opts] = init_outlet('LeftModel',left_model, 'RightModel', right_model, 'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','expectation','UpdateFrequency',prediction_frequency);
-end
+global_file = io_load(strcat(model_path,global_model_file));
+disp("Starting the outlet...")
+[eeg_outlet,  opts] = init_outlet_global('GlobalModel',global_file.model, 'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','expectation','UpdateFrequency',prediction_frequency);
+
 
 
 
@@ -114,32 +101,19 @@ Controle = imread(strcat(resource_path,'Controle_09.jpg'));
 KbName('UnifyKeyNames');
 
 % lancer les pr�dicitons 
-if both
-    onl_write_background( ...
-        'ResultWriter',@(y)send_samples_global(eeg_outlet, hands, config, y),...
-        'MatlabStream',opts.in_stream, ...
-        'Model',global_file.model, ...
-        'OutputFormat',opts.out_form, ...
-        'UpdateFrequency',opts.update_freq, ...
-        'PredictorName',opts.pred_name, ...
-        'PredictAt',opts.predict_at, ...
-        'Verbose',opts.verbose, ...
-        'StartDelay',0,...
-        'EmptyResultValue',[]);
-else
-    onl_write_background_2_models( ...
-        'ResultWriter',@(y1, y2)send_samples(eeg_outlet, hands, config, threshold, y1, y2),...
-        'MatlabStream',opts.in_stream, ...
-        'LeftModel',left_model, ...
-        'RightModel', right_model, ...
-        'OutputFormat',opts.out_form, ...
-        'UpdateFrequency',opts.update_freq, ...
-        'PredictorName',opts.pred_name, ...
-        'PredictAt',opts.predict_at, ...
-        'Verbose',opts.verbose, ...
-        'StartDelay',0,...
-        'EmptyResultValue',[]);
-end
+
+onl_write_background( ...
+    'ResultWriter',@(y)send_samples_global(eeg_outlet, hands, config, y),...
+    'MatlabStream',opts.in_stream, ...
+    'Model',global_file.model, ...
+    'OutputFormat',opts.out_form, ...
+    'UpdateFrequency',opts.update_freq, ...
+    'PredictorName',opts.pred_name, ...
+    'PredictAt',opts.predict_at, ...
+    'Verbose',opts.verbose, ...
+    'StartDelay',0,...
+    'EmptyResultValue',[]);
+
 for BLOCK=1
     %% Temps random croix de fixation
     ITI=random('unif',1.5,2.3,60,1)';
@@ -198,7 +172,7 @@ for BLOCK=1
         
         while true
             [secs, keyCode, deltaSecs] = KbWait;
-            WaitSecs(0.2);
+            WaitSecs(0.1);
             if strcmp(KbName(keyCode),'x') || strcmp(KbName(keyCode),'n')
                 break;
             end
@@ -282,41 +256,23 @@ end
 
 Screen('CloseAll');
 
-
-function send_samples(outlet, hands, config,threshold,y1, y2)
-    if ~isempty(y1) && ~isempty(y2)
-        outlet.push_chunk(y1');
-        outlet.push_chunk(y2');
-        if (y1-1) >= threshold && (y2-1) >= threshold
-            disp('Both hands activated');
-            activate(hands, config, 'left', 2);
-            activate(hands, config, 'right', 2);
-        elseif (y1-1) >= threshold
-            disp('Left hand activated');
-            activate(hands, config, 'left', 2);
-        elseif (y2-1) >= threshold
+function send_samples_global(outlet, hands, config,y)
+    if ~isempty(y)
+        outlet.push_chunk(y');
+        if y == 2
             disp('Right hand activated');
             activate(hands, config, 'right', 2);
         end
-    end
-    function send_samples_global(outlet, hands, config,y)
-        if ~isempty(y)
-            outlet.push_chunk(y');
-            if y == 2
-                disp('Right hand activated');
-                activate(hands, config, 'right', 2);
-            end
-            if y == 1
-                disp('Left hand activated');
-                activate(hands, config, 'left', 2);
-            end
-            if y == 3
-                disp('Resting');
-            end
-        else
-            disp('No prediction');
+        if y == 1
+            disp('Left hand activated');
+            activate(hands, config, 'left', 2);
         end
-
+        if y == 3
+            disp('Resting');
+        end
+    else
+        disp('No prediction');
     end
-end                  
+
+end
 

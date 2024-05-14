@@ -10,8 +10,8 @@ function xdf2bdf(xdf_file)
     end
     eeg_data = eeg.data(2:73, :);
     trigger_data = eeg.data(1, :);
-    filename = strcat(result_path, xdf_file(1:-4), '.bdf');
-    f = writeeeg(filename, eeg_data, eeg.srate, 'label', labels, 'TYPE', 'BDF');
+    filename = strcat(result_path, xdf_file(1:length(xdf_file)-4), '.bdf');
+    f = writeeeg(filename(1:length(filename) - 4), eeg_data, eeg.srate, 'label', labels, 'TYPE', 'BDF');
     t = writeeeg(strcat(filename, '_trigger.bdf'), trigger_data, eeg.srate, 'label', {'Trigger'}, 'TYPE', 'BDF');
 end
 
