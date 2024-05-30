@@ -11,29 +11,21 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
     % - show_feedback_to_user: boolean, whether to show the feedback to the user
     % - prediction_frequency: integer, the frequency at which the prediction is made
     global_model_file = 'global_model';
+
     model_path = 'data/models/';
 
     % Check input
-    rest_class = false;
     for i = 1:length(markers)
         if ~strcmp(markers{i},'left') && ~strcmp(markers{i},'right') && ~strcmp(markers{i},'rest') && ~strcmp(markers{i},'tongue')
             error('Markers should be chosen in the following list: ''left'',''right'',''rest'',''tongue''')
         end
-        if strcmp(markers{i},'rest')
-            rest_class = true;
-        end
-    end
-    if rest_class
-        nb_classes = length(markers);
-    else
-        nb_classes = length(markers)+1;
     end
 
     % LSL
     info = lsl_streaminfo(LibHandle,'MyMarkerStream','Markers',1,0,'cf_string','myuniquesourceid23443');
     marker_outlet = lsl_outlet(info);
     if show_feedback_to_user
-        hands = init_hands();
+        hands = init_hands('COM12');
         global_file = io_load(strcat(model_path,global_model_file));
         [result_outlet,  opts] = init_outlet_global('GlobalModel',global_file.model, 'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','expectation','UpdateFrequency',prediction_frequency)
         onl_write_background(...
@@ -118,31 +110,21 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
         [secs, keyCode, deltaSecs] = KbWait; 
     end
     
-    
-
     % What we want to do is to simulate nb_trials_per_marker for each hand
     % and label 'rest' the rest of the signal
-
     while trial<=length(trials)
-        % Activate fingers (servomotors)
-        if show_feedback_to_user
-            activate(hands);
-        end
+
         if length(cross_delay) == 2
-            delay = randi(cross_delay)/1000;
+            cross_delay = randi(cross_delay)/1000;
         else
-            delay = cross_delay/1000;
+            cross_delay = cross_delay/1000;
         end
-        timerVal1 = tic;
         
         marker_outlet.push_sample({'cross'});
 
         % Display fixation cross
-        while toc(timerVal1) < delay
-            Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
-            Screen('Flip', window);
-        end
-        
+        Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
+        vbl = Screen('Flip', window);
 
         % Displaying Fixation cross + Arrow
         Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
@@ -160,57 +142,50 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
         end
         
         marker = trials(trial);
-        marker_outlet.push_sample(marker);
 
         if length(arrow_delay) == 2
-            delay = randi(arrow_delay)/1000;
+            arrow_delay = randi(arrow_delay)/1000;
         else
-            delay = arrow_delay/1000;
+            arrow_delay = arrow_delay/1000;
         end
 
-        timerVal1 = tic;
+
         % Draw the arrow
-        while toc(timerVal1) < delay
-            Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
-            Screen('FillPoly', window, rectColor, RectVector', isConvex);
-            Screen('FillPoly', window, rectColor, TriangleVector', isConvex);
-            Screen('Flip', window);
-        end
+        Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
+        Screen('FillPoly', window, rectColor, RectVector', isConvex);
+        Screen('FillPoly', window, rectColor, TriangleVector', isConvex);
+        % send the marker
+        marker_outlet.push_sample(marker);
+        vbl = Screen('Flip', window, vbl + cross_delay - cycleRefresh/2);
 
         % Fixation cross
-        
         marker_outlet.push_sample({'imagery'});
         if length(imagination_delay) == 2
-            delay = randi(imagination_delay)/1000;
+            imagination_delay = randi(imagination_delay)/1000;
         else
-            delay = imagination_delay/1000;
-        end
-        timerVal1 = tic;
-        while toc(timerVal1) < delay
-            Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
-            Screen('Flip', window);
+            imagination_delay = imagination_delay/1000;
         end
 
-        % Nothing
+        Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
+        vbl = Screen('Flip', window, vbl + arrow_delay - cycleRefresh/2);
+
+        % Pause
         
         marker_outlet.push_sample({'pause'});
-        if show_feedback_to_user
-            deactivate(hands);
-        end
-        
         if length(rest_delay) == 2
-            delay = randi(rest_delay)/1000;
+            rest_delay = randi(rest_delay)/1000;
         else
-            delay = rest_delay/1000;
+            rest_delay = rest_delay/1000;
         end
+        vbl = Screen('Flip', window, vbl + imagination_delay - cycleRefresh/2);
         timerVal1 = tic;
-        while toc(timerVal1) < delay
-             Screen('Flip', window);
+        while toc(timerVal1) < 0.95*rest_delay
              [keyIsDown, secs, keyCode, deltaSecs] = KbCheck(0);
              if strcmp(KbName(find(keyCode)),'ESCAPE')
                  trial = length(trials)+1;
              end
         end
+        vbl = Screen('Flip', window, vbl + rest_delay - cycleRefresh/2);
         trial = trial + 1;
         disp(trial);
     end
