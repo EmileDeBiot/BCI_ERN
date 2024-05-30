@@ -63,7 +63,7 @@ if ~is_test
     hands = init_hands();
 
     onl_write_background( ...
-    'ResultWriter',@(y)send_samples_global(bci_outlet, hands, y),...
+    'ResultWriter',@(y)action(hands, y, bci_outlet),...
     'MatlabStream',opts.in_stream, ...
     'Model',global_file.model, ...
     'OutputFormat',opts.out_form, ...
@@ -386,23 +386,3 @@ if ~is_test
     save(strcat(data_path, 'flankers_data.mat'), 'data');
 end
 sca;
-
-
-function send_samples_global(outlet, hands, y)
-    if ~isempty(y)
-        outlet.push_chunk(y');
-        if y == 2
-            disp('Right hand activated');
-            action(hands,2, outlet);
-        end
-        if y == 1
-            disp('Left hand activated');
-            action(hands, 1, outlet);
-        end
-        if y == 3
-            disp('Resting');
-        end
-    else
-        disp('No prediction');
-    end
-end

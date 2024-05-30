@@ -103,7 +103,7 @@ KbName('UnifyKeyNames');
 % lancer les pr�dicitons 
 
 onl_write_background( ...
-    'ResultWriter',@(y)send_samples_global(eeg_outlet, hands, y),...
+    'ResultWriter',@(y)action(hands, y, eeg_outlet),...
     'MatlabStream',opts.in_stream, ...
     'Model',global_file.model, ...
     'OutputFormat',opts.out_form, ...
@@ -257,23 +257,4 @@ end
 
 Screen('CloseAll');
 
-function send_samples_global(outlet, hands, y)
-    if ~isempty(y)
-        outlet.push_chunk(y');
-        if y == 2
-            disp('Right hand activated');
-            action(hands,2, outlet);
-        end
-        if y == 1
-            disp('Left hand activated');
-            activate(hands, 2, outlet);
-        end
-        if y == 3
-            disp('Resting');
-        end
-    else
-        disp('No prediction');
-    end
-
-end
 
