@@ -8,11 +8,10 @@ function feedback_session(threshold, modelFile, testedHand)
     close all;
     cap = 64;
     prediction_frequency = 10;
-    thresholds = [0.2 threshold 1];
 
     %% Init
     % load BCILAB
-    init_bci;
+    init_bci_lab;
 
     % Open Biosemi to LSL connection
     LibHandle = lsl_loadlib();
@@ -26,17 +25,21 @@ function feedback_session(threshold, modelFile, testedHand)
     while isempty(Streaminfos)
         [Streaminfos] = lsl_resolve_all(LibHandle);
     end
-    disp('The BioSemi is linked to LSL');
+        disp('The BioSemi is linked to LSL');
 
+    
     %% Feedback
     file = io_load(strcat(model_path,modelFile));
     model = file.model;
     hands = init_hands();
-    [result_outlet,  opts] = init_outlet_global('GlobalModel',model, 'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','expectation','UpdateFrequency',prediction_frequency);
+    run_readlsl('new_stream', 'BioSemi','marker_query', '');
+    [result_outlet, opts] = init_outlet_global('GlobalModel',model,'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','expectation','UpdateFrequency',prediction_frequency);
+    activate(hands);
+    disp('hands activated...');
     onl_write_background(...
         'ResultWriter',@(y)action(hands, y, result_outlet),...
         'MatlabStream',opts.in_stream, ...
-        'Model',global_file.model, ...
+        'Model',model, ...
         'OutputFormat',opts.out_form, ...
         'UpdateFrequency',opts.update_freq, ...
         'PredictorName',opts.pred_name, ...
@@ -45,7 +48,8 @@ function feedback_session(threshold, modelFile, testedHand)
         'StartDelay',0,...
         'EmptyResultValue',[]);
     
-    activate(hands);
+    disp('Writing...');
+    
 
     %% Visualization
     vis_stream('BioSemi',10,5,150,1:1+cap+8,100,10);

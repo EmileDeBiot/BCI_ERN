@@ -7,7 +7,6 @@ function get_online_accuracy(markers, data_file, model_file)
     model_path = 'data/models/';
     
     disp(model_file)
-    thresholds = [0 threshold 1];
     init_bci_lab();
     data = exp_eval(io_loadset(strcat(data_path,data_file,'.xdf')));
     model = utl_loadmodel(strcat(model_path, model_file, '.mat'));
