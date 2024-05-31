@@ -28,7 +28,7 @@ void setup()
 
 void loop() {
   if (Serial.available() > 0){
-    cmd = Serial.read();
+    char cmd = Serial.read();
     // activate the hands
     if (cmd == 'a'){
       init_servo();
@@ -36,13 +36,13 @@ void loop() {
     }
     // deactivate the hands
     else if (cmd == 'd'){
-      if is_ready{
+      if (is_ready){
         deactivate();
       }
     }
     // check if the hands are ready
     else if (cmd == 'c'){
-      if is_ready {
+      if (is_ready) {
         Serial.println("Ready for movement.");
       }
       else{
