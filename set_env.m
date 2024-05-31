@@ -1,5 +1,7 @@
 addpath('utils/');
 addpath('robotic_hands/');
+addpath('test/');
+addpath('exp_paradigms/');
 
 %check if the data paths exists
 if ~exist('data/data/', 'dir')
