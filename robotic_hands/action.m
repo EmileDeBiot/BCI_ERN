@@ -7,7 +7,7 @@ function action(hands, y, outlet)
 
     
     write(hands, 'c', "char"); % Checks if the hands are activated
-    disp(read(hands, 10, "char"));
+    % disp(read(hands, 4, "char"));
     if nargin == 3
         outlet.push_sample(side');
     else
