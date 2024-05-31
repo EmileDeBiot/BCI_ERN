@@ -13,9 +13,9 @@ function training_session(previousModel, testedHand, nbTrialsPerHand, crossDelay
     
     cap = 64;
     if strcmp(testedHand, 'both')
-        markers = {'left', 'right'};
+        markers = {'left', 'right','rest'};
     else
-        markers = {testedHand};
+        markers = {testedHand, 'rest'};
     end
     show_feedback_to_user = false; % ok only for (rest vs) right and left vs (rest vs) right
     

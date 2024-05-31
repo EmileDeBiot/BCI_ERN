@@ -13,7 +13,11 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
     global_model_file = 'global_model';
 
     model_path = 'data/models/';
-
+    
+    cross_delay = cross_delay/1000;
+    arrow_delay = arrow_delay/1000;
+    imagination_delay = imagination_delay/1000;
+    rest_delay = rest_delay/1000;
     % Check input
     for i = 1:length(markers)
         if ~strcmp(markers{i},'left') && ~strcmp(markers{i},'right') && ~strcmp(markers{i},'rest') && ~strcmp(markers{i},'tongue')
@@ -25,7 +29,7 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
     info = lsl_streaminfo(LibHandle,'MyMarkerStream','Markers',1,0,'cf_string','myuniquesourceid23443');
     marker_outlet = lsl_outlet(info);
     if show_feedback_to_user
-        hands = init_hands('COM12');
+        hands = init_hands();
         global_file = io_load(strcat(model_path,global_model_file));
         [result_outlet,  opts] = init_outlet_global('GlobalModel',global_file.model, 'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','expectation','UpdateFrequency',prediction_frequency)
         onl_write_background(...
@@ -62,6 +66,9 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
     % will be half the luminace values for white
     grey = white / 2;
     % Open an on screen window
+    % In the lab monitors are inverted so we are going to use 1 for the
+    % moment (hope I will be authorized to change this)
+    screenNumber = 1;
     [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey);
     % Get the size of the on screen window
     [screenXpixels, screenYpixels] = Screen('WindowSize', window);
@@ -113,15 +120,8 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
     % What we want to do is to simulate nb_trials_per_marker for each hand
     % and label 'rest' the rest of the signal
     while trial<=length(trials)
-
-        if length(cross_delay) == 2
-            cross_delay = randi(cross_delay)/1000;
-        else
-            cross_delay = cross_delay/1000;
-        end
         
         marker_outlet.push_sample({'cross'});
-
         % Display fixation cross
         Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
         vbl = Screen('Flip', window);
@@ -143,12 +143,6 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
         
         marker = trials(trial);
 
-        if length(arrow_delay) == 2
-            arrow_delay = randi(arrow_delay)/1000;
-        else
-            arrow_delay = arrow_delay/1000;
-        end
-
 
         % Draw the arrow
         Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
@@ -156,15 +150,11 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
         Screen('FillPoly', window, rectColor, TriangleVector', isConvex);
         % send the marker
         marker_outlet.push_sample(marker);
+        disp(marker)
         vbl = Screen('Flip', window, vbl + cross_delay - cycleRefresh/2);
 
         % Fixation cross
         marker_outlet.push_sample({'imagery'});
-        if length(imagination_delay) == 2
-            imagination_delay = randi(imagination_delay)/1000;
-        else
-            imagination_delay = imagination_delay/1000;
-        end
 
         Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
         vbl = Screen('Flip', window, vbl + arrow_delay - cycleRefresh/2);
@@ -172,11 +162,7 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
         % Pause
         
         marker_outlet.push_sample({'pause'});
-        if length(rest_delay) == 2
-            rest_delay = randi(rest_delay)/1000;
-        else
-            rest_delay = rest_delay/1000;
-        end
+
         vbl = Screen('Flip', window, vbl + imagination_delay - cycleRefresh/2);
         timerVal1 = tic;
         while toc(timerVal1) < 0.95*rest_delay

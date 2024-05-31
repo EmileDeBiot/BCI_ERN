@@ -13,7 +13,7 @@ function training_model(testedHand, files)
     elseif strcmp(testedHand, 'left')
         markers = {'rest','left'};
     end
-    
+    markers = {'left', 'right', 'rest'};
     select_all_channel = false;
     artifact_correction = true;
 
@@ -61,19 +61,18 @@ function training_model(testedHand, files)
         if artifact_correction
             selected_channels{end+1} = 'EX3';
             selected_channels{end+1} = 'EX4';
-            selected_channels{biosemi_cfg+5} = 'EX5';
-            selected_channels{biosemi_cfg+6} = 'EX6';
-            selected_channels{biosemi_cfg+7} = 'EX7';
-            selected_channels{biosemi_cfg+8} = 'EX8';
+            selected_channels{end+1} = 'EX5';
+            selected_channels{end+1} = 'EX6';
+            selected_channels{end+1} = 'EX7';
+            selected_channels{end+1} = 'EX8';
         end
     end
-
+    disp(selected_channels);
     %% Training
     % Concatenating all data files to build a new model
     % Necessary because BCILAB does not support training with multiple files/finetuning
     for i = 1:length(files)
-        disp(pwd)
-        dataset = io_loadset(strcat(data_path,files{i},'.xdf'));
+        dataset = eeg_load_xdf(strcat(data_path,files{i},'.xdf'), 'streamname', 'BioSemi');
         if i == 1
             data = dataset;
         else
@@ -87,20 +86,12 @@ function training_model(testedHand, files)
         'ChannelSelection',{'Channels',selected_channels}, ...
         'Rereferencing',{'ReferenceChannels',{'EX1','EX2'},'KeepReference',false}, ...
         'FIRFilter','off', ...
-        'EpochExtraction',{'TimeWindow',[search(0:0.5:1),search(1.5:1.5:4.5)]}, ... % using search to find the best window
+        'EpochExtraction',{'TimeWindow',[0,2]}, ... % using search to find the best window
         }, ...
         'Prediction',{ ...
         'FeatureExtraction',{'PatternPairs',1,'FreqWindows',[8 12;13 30],'WindowFunction','rect'}, ... % Specific brain waves
         'MachineLearning',{'Learner',{'lda','WeightedBias',true,'WeightedCov',true}}} ...
         };
-
-    % Insert rest markers for the training
-    % Label 'rest' the duration between the cross and the beginning of the arrow
-    set_insert_markers(data, 'SegmentSpec',{'cross',0,0,'left'},'Event','rest')
-    set_insert_markers(data, 'SegmentSpec',{'cross',0,0,'right'},'Event','rest')
-
-    % Label 'rest' the duration between the end of the arrow and the pause
-    set_insert_markers(data, 'SegmentSpec',{'imagery',0.2,0,'pause'},'Event','rest')
 
     [trainloss,model,stats] = bci_train('Data',data, 'Approach', approach, 'TargetMarkers',markers);
     disp(['training mis-classification rate: ' num2str(trainloss*100,3) '%']);
