@@ -68,7 +68,6 @@ function [outlet, opts] = init_outlet_global(varargin)
         newchn.append_child_value('name',opts.channel_names{c});
         newchn.append_child_value('type',opts.out_form);
     end
-    
     % create an outlet
     outlet = lsl_outlet(info);
 end
