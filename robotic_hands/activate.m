@@ -3,5 +3,5 @@ function activate(hands)
     % hands: serialport object
     
     write(hands, 'a', "char");
-    % disp(read(hands, 20, "char"));
+    disp(readline(hands));
 end
