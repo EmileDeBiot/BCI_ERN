@@ -61,6 +61,6 @@
             ]
         }
     ],
-    "port": "COM12",
+    "port": "COM7",
     "baudrate": 115200.0
 }

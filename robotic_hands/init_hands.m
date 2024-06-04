@@ -11,5 +11,4 @@ function hands = init_hands()
 
     % Connect to the hands
     hands = serialport(com, baudrate);
-    % disp(read(hands, 50, "char"));
 end
