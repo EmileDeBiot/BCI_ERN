@@ -7,15 +7,14 @@ function feedback_session(threshold, modelFile, testedHand)
 
     close all;
     cap = 64;
-    prediction_frequency = 10;
-
+    prediction_frequency = 0.3;
     %% Init
     % load BCILAB
     init_bci_lab;
 
     % Open Biosemi to LSL connection
-    LibHandle = lsl_loadlib();
-    [Streaminfos] = lsl_resolve_all(LibHandle);
+    lib = lsl_loadlib();
+    [Streaminfos] = lsl_resolve_all(lib);
     if isempty(Streaminfos)
         cd BioSemi
         system(strcat('BioSemi.exe -c my_config',num2str(cap),'.cfg &'));
@@ -23,7 +22,7 @@ function feedback_session(threshold, modelFile, testedHand)
         disp('Waiting for you to connect the BioSemi to LSL...');
     end
     while isempty(Streaminfos)
-        [Streaminfos] = lsl_resolve_all(LibHandle);
+        [Streaminfos] = lsl_resolve_all(lib);
     end
         disp('The BioSemi is linked to LSL');
 
@@ -33,11 +32,13 @@ function feedback_session(threshold, modelFile, testedHand)
     model = file.model;
     hands = init_hands();
     run_readlsl('new_stream', 'BioSemi','marker_query', '');
-    [result_outlet, opts] = init_outlet_global('GlobalModel',model,'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','expectation','UpdateFrequency',prediction_frequency);
+    [result_outlet, opts] = init_outlet_global('GlobalModel',model,'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','mode','UpdateFrequency',prediction_frequency);
+    %% Visualization
+    vis_stream('BioSemi',10,5,150,1:1+cap+8,100,10);
+    vis_stream('BCI',10,5,150,1,100,10);
     activate(hands);
-    disp('hands activated...');
     onl_write_background(...
-        'ResultWriter',@(y)action(hands, y, result_outlet),...
+        'ResultWriter',@(y)action(hands, y),...
         'MatlabStream',opts.in_stream, ...
         'Model',model, ...
         'OutputFormat',opts.out_form, ...
@@ -47,16 +48,15 @@ function feedback_session(threshold, modelFile, testedHand)
         'Verbose',opts.verbose, ...
         'StartDelay',0,...
         'EmptyResultValue',[]);
-    
+
     disp('Writing...');
     
 
-    %% Visualization
-    vis_stream('BioSemi',10,5,150,1:1+cap+8,100,10);
-    vis_stream('BCI',10,5,150,1,100,10);
+
 
     %% Clear
     input('Press a key to finish the session...');
     onl_clear;
+    deactivate(hands);
     close all; 
 end

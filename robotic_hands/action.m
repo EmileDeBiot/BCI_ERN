@@ -18,16 +18,18 @@ function action(hands, y, outlet)
         end
         outlet.push_sample(side');
     else
-        disp('No outlet provided');
+        % disp('No outlet provided');
     end
     % left side
     if y == 1
         write(hands, 'l', "char");
+        % disp('left');
     % right side
     elseif y == 2
         write(hands, 'r', "char");
+        % disp('right');
     % rest -> nothing to do
     else    
-        return
+        disp('rest');
     end
 end
