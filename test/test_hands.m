@@ -1,5 +1,5 @@
 function test_hands()
-    % Test the robotic hands
+    % Test the robotic hands without arduino sketch
 
     config = readstruct('hands_config.json');
     com = config.port;
