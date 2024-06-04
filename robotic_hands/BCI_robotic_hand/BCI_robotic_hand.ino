@@ -23,7 +23,7 @@ void setup()
 {
   Serial.begin(115200);  delay(1000);
   Serial.println("Connection created");
-  test(); // tests if the servos are working and the parameters are correct
+  //test(); // tests if the servos are working and the parameters are correct
 }
 
 void loop() {
@@ -38,6 +38,7 @@ void loop() {
     else if (cmd == 'd'){
       if (is_ready){
         deactivate();
+        is_ready = false;
       }
     }
     // check if the hands are ready
@@ -56,12 +57,12 @@ void loop() {
 
 void actuateFinger(int cmd)
 {
-  if (cmd == 1){
+  if (cmd == 'l'){
     servoL.write(push_angle[0]);
     delay(800);
     servoL.write(up_angle[0]);
   }
-  else if (cmd == 2){
+  else if (cmd == 'r'){
     servoR.write(push_angle[1]);
     delay(800);
     servoR.write(up_angle[1]);
