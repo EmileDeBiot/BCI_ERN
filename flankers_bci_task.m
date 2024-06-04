@@ -157,8 +157,6 @@ KbStrokeWait;
 vbl = Screen('Flip', window); % initial flip
 % Run the flankers tasks
 for trial = 1:nTrials
-    
-
     % Fixation cross
     [img, ~, alpha]=imread(strcat(resource_path,'cross.png'));
     img(:,:,4) = alpha;
@@ -228,7 +226,6 @@ for trial = 1:nTrials
     Screen('TextSize', window, 70);
     DrawFormattedText(window, 'Make your move!', 'center',...
         height * 0.50, [1 0 0]);
-    % Send decision trigger
     
     vbl = Screen('Flip', window, vbl + (flanker_duration - 0.5) * ifi);
 
