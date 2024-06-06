@@ -16,7 +16,7 @@ Run run_training to start the training when the EEG setup is done and verified w
 
 A window will open from which you can run all the necessary functions for training.
 
-![](/data/README/experiment_parameters.png?raw=true)
+![Experiment parameter](data/README/experiment_parameters.png?raw=true)
 
 ## Experiments
 
