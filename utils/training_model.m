@@ -67,7 +67,6 @@ function training_model(testedHand, files)
             selected_channels{end+1} = 'EX8';
         end
     end
-    disp(selected_channels);
     %% Training
     % Concatenating all data files to build a new model
     % Necessary because BCILAB does not support training with multiple files/finetuning

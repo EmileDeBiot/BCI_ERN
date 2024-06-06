@@ -1,4 +1,4 @@
-function feedback_session(threshold, modelFile, testedHand)
+function feedback_session(modelFile, testedHand)
     % feedback_session: Run a feedback session with the given model and hand
     %   threshold: The threshold for the feedback
     %   modelFile: The file containing the model
