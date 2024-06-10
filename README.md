@@ -34,7 +34,7 @@ Only then will the training paradigm start.
 
 3. Training model
 
-If you have created all the data files you want or if you want to make the hand move during the training (will use more computing time because there is no way to fine tune a model with a new piece of data in the toolbox used), you can click on training model. This function will concatenate all data files and training a signal processing model recognizing markers (right, left, rest). 
+If you have created all the data files you want or if you want to make the hand move during the training (will use more computing time because there is no way to fine tune a model with a new piece of data in the toolbox used), you can click on training model. This function will concatenate all data files and train a signal processing classification model.
 
 4. Get Online Accuracy
 
