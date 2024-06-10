@@ -3,17 +3,15 @@ clear;
 params = struct('ID', 'P1_HR_T1', ...
                 'previousModel', '', ...
                 'previousModel2', '', ...
-                'testedHand', 'right', ...
+                'testedHand', 'both', ...
                 'nbTrialsPerHand', 20, ...
                 'crossDelay', 3000, ...
                 'arrowDelay', 3000, ...
                 'imaginationDelay', 2000, ...
-                'restDelay', 0, ...
+                'restDelay', 2000, ...
                 'predictionFrequency', 10, ...
                 'files', '', ...
-                'threshold', 0.5, ...
                 'file', '', ...
-                'threshold2', 0.8, ...
                 'modelFile', '',...
                 'otherFile', '');
             
@@ -35,9 +33,7 @@ function open_window_1(params)
     uilabel(f, 'Text', 'Rest delay:', 'Position', [110, 60, 100, 20]);
     uilabel(f, 'Text', 'Prediction frequency:', 'Position', [109, 35, 102, 20]);
     uilabel(f, 'Text', 'Files:', 'Position', [335, 165, 80, 20]);
-    uilabel(f, 'Text', 'Threshold:', 'Position', [450, 165, 80, 20]);
     uilabel(f, 'Text', 'File:', 'Position', [450, 140, 80, 20]);
-    uilabel(f, 'Text', 'Threshold:', 'Position', [650, 165, 80, 20]);
     uilabel(f, 'Text', 'Model file:', 'Position', [650, 140, 80, 20]);
     uilabel(f, 'Text', 'Other file:', 'Position', [650, 115, 80, 20], 'Visible', 'Off');
     
@@ -51,9 +47,7 @@ function open_window_1(params)
     eImaginationDelay      = uitextarea(f, 'Position', [220, 85, 80, 20], 'Value', num2str(params.imaginationDelay));
     eRestDelay             = uitextarea(f, 'Position', [220, 60, 80, 20], 'Value', num2str(params.restDelay));
     ePredictionFrequency   = uitextarea(f, 'Position', [220, 35, 80, 20], 'Value', num2str(params.predictionFrequency));
-    eThreshold             = uitextarea(f, 'Position', [550, 165, 80, 20], 'Value', num2str(params.threshold));
     eFile                  = uitextarea(f, 'Position', [550, 140, 80, 20], 'Value', params.file);
-    eThreshold2            = uitextarea(f, 'Position', [750, 165, 80, 20], 'Value', num2str(params.threshold2));
     eModelFile             = uitextarea(f, 'Position', [710, 140, 120, 20], 'Value', params.modelFile);
     eOtherFile             = uitextarea(f, 'Position', [710, 115, 120, 20], 'Value', params.otherFile, 'Visible', 'Off');
     
@@ -88,9 +82,7 @@ function open_window_1(params)
                                        ePredictionFrequency, ...
                                        bRight, bLeft, bBoth, ...
                                        eFiles, ...
-                                       eThreshold, ...
                                        eFile,...
-                                       eThreshold2,...
                                        eModelFile,...
                                        eOtherFile});
     bTrainingModel = uibutton(f, 'push', 'Text', 'Training Model', 'Position', [330, 5, 90, 20]);
@@ -103,23 +95,18 @@ function open_window_1(params)
                                      ePredictionFrequency, ...
                                      bRight, bLeft, bBoth, ...
                                      eFiles, ...
-                                     eThreshold, ...
                                      eFile, ...
-                                     eThreshold2,...
                                      eModelFile,...
                                      eOtherFile});
 
     bGetOnlineAccuracy = uibutton(f, 'push', 'Text', 'Get Online Accuracy', 'Position', [480, 5, 120, 20]);
     set(bGetOnlineAccuracy, 'ButtonPushedFcn', {@cbGetOnlineAccuracy, ...
                                                  ePreviousModel, ...
-                                                 bRight, bLeft, bBoth, ...
-                                                 eThreshold, ...
                                                  eFile});
     bFeedbackSession = uibutton(f, 'push', 'Text', 'Feedback Session', 'Position', [680, 5, 120, 20]);
     set(bFeedbackSession, 'ButtonPushedFcn', {@cbFeedbackSession, ...
-                                               eThreshold2, ...
                                                eModelFile,...
-                                               bRight, bLeft, bBoth});
+                                               });
 
     bUpdate = uibutton(f, 'push', 'Text', 'Update', 'Position', [335, 195, 80, 20]);
     set(bUpdate, 'ButtonPushedFcn', {@cbUpdate, ...
@@ -143,7 +130,7 @@ function open_window_1(params)
 end
 
 % Fonction de callback du bouton start
-function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossDelay, eArrowDelay, eImaginationDelay, eRestDelay, ePredictionFrequency, bRight, bLeft, bBoth, eFiles, eThreshold, eFile, eThreshold2, eModelFile, eOtherFile)
+function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossDelay, eArrowDelay, eImaginationDelay, eRestDelay, ePredictionFrequency, bRight, bLeft, bBoth, eFiles, eFile, eModelFile, eOtherFile)
     % Start the training session
     % Inputs:
     %   ~: unused
@@ -161,9 +148,7 @@ function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCros
     %   bLeft: left hand radiobutton
     %   bBoth: both hands radiobutton
     %   eFiles: files
-    %   eThreshold: threshold
     %   eFile: file
-    %   eThreshold2: threshold 2
     %   eModelFile: model file
     %   eOtherFile: other file
     
@@ -229,9 +214,7 @@ function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCros
     
     
     
-    params.threshold               = str2double(get(eThreshold, 'Value'));
     params.file                    = get(eFile, 'Value');
-    params.threshold2              = str2double(get(eThreshold2, 'Value'));
     params.modelFile               = get(eModelFile, 'Value');
     params.otherFile               = get(eOtherFile, 'Value');
     
@@ -261,7 +244,7 @@ function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCros
     open_window_1(params);
 end
 
-function cbTrainingModel(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossDelay, eArrowDelay, eImaginationDelay, eRestDelay, ePredictionFrequency, bRight, bLeft, bBoth, eFiles, eThreshold, eFile, eThreshold2, eModelFile, eOtherFile)
+function cbTrainingModel(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossDelay, eArrowDelay, eImaginationDelay, eRestDelay, ePredictionFrequency, bRight, bLeft, bBoth, eFiles, eFile, eModelFile, eOtherFile)
     data_path = 'data/data/';
     model_path = 'data/models/';
     % V�rification
@@ -286,9 +269,7 @@ function cbTrainingModel(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossD
     params.restDelay               = str2double(get(eRestDelay, 'Value'));
     params.predictionFrequency     = str2double(get(ePredictionFrequency, 'Value'));
     params.files                   = get(eFiles, 'Value');
-    params.threshold               = str2double(get(eThreshold, 'Value'));
     params.file                    = get(eFile, 'Value');
-    params.threshold2              = str2double(get(eThreshold2, 'Value'));
     params.modelFile               = get(eModelFile, 'Value');
     params.otherFile               = get(eOtherFile, 'Value');
 
@@ -332,69 +313,33 @@ function cbTrainingModel(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossD
     
     open_window_1(params);
 end
-function cbGetOnlineAccuracy(~, ~, ePreviousModel, bRight, bLeft, bBoth, eThreshold, eFile)
+function cbGetOnlineAccuracy(~, ~, ePreviousModel, eFile)
     data_path = 'data/data/';
-    % V�rification des param�tres
-    if get(bRight, 'Value')
-        params.testedHand = 'right';
-    elseif get(bLeft, 'Value')
-        params.testedHand = 'left';
-    elseif get(bBoth, 'Value')
-        params.testedHand = 'both';
-    end
-
-    
-    num = str2double(get(eThreshold, 'Value'));
-    if isnan(num) || ~isnumeric(num) || num < 0 || num > 1
-        disp('Param�tre [Threshold] incorrect')
-        return;
-    end
-    
-    params.threshold = num;
     
     params.file = char(get(eFile, 'Value'));
     if ~(exist(strcat(data_path, params.file, '.xdf'), 'file') == 2)
-        disp('Fichier introuvable');
+        disp('Could not find the file');
         return;
     end
     params.modelFile = char(get(ePreviousModel, 'Value'));
 
     disp('Get Online Accuracy');
-    if strcmp(params.testedHand, 'both')
-        markers = {'cross', 'right', 'left'};
-    else
-        markers = {'cross',params.testedHand};
-    end
     
-    get_online_accuracy(markers, params.file, params.modelFile);
+    get_online_accuracy(params.file, params.modelFile);
 end
 
-function cbFeedbackSession(~, ~, eThreshold2, eModelFile, bRight, bLeft, bBoth)
+function cbFeedbackSession(~, ~, eModelFile)
     model_path = 'data/models/';
-    if get(bRight, 'Value')
-        params.testedHand = 'right';
-    elseif get(bLeft, 'Value')
-        params.testedHand = 'left';
-    elseif get(bBoth, 'Value')
-        params.testedHand = 'both';
-    end
-
-    num = str2double(get(eThreshold2, 'Value'));
-    if isnan(num) || ~isnumeric(num) || num < 0 || num > 1
-        disp('Param�tre [Threshold] incorrect')
-        return;
-    end
-    params.threshold2 = num;
     
     params.modelFile = char(get(eModelFile, 'Value'));
     if ~(exist(strcat(model_path, params.modelFile, '.mat'), 'file') == 2)
-        disp('Fichier introuvable');
+        disp('No model file found');
         return;
     end
   
     
     disp('Feedback session');
-    feedback_session(params.threshold2, params.modelFile, params.testedHand);
+    feedback_session(params.modelFile);
 end
 
 function cbUpdate(~, ~, eID, ePreviousModel, bRight, bLeft, bBoth, eFiles, eFile, eModelFile, eOtherFile)
@@ -402,7 +347,7 @@ function cbUpdate(~, ~, eID, ePreviousModel, bRight, bLeft, bBoth, eFiles, eFile
     model_path = 'data/models/';
     params.ID = char(get(eID, 'Value'));
     if isempty(regexp(params.ID, '^P\d+_H[RLB]_T\d+$', 'once'))
-        disp('Mauvais format d''[ID]. Suivez le format ''Px_Hy_Tz''');
+        disp('Wrong format d''[ID]. Use this format ''Px_Hy_Tz''');
         return;
     end
     

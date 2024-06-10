@@ -320,7 +320,7 @@ for trial = 1:nTrials
     trigger_outlet.push_sample({'feedback'});
     vbl = Screen('Flip', window, postwritetime);
 
-    %% Show the arrows and circle the biggest one
+    % Show the arrows and circle the biggest one
     for j=1:nArrows
         if arrowDirections(j)==1
             [img, ~, alpha]=imread(strcat(resource_path,'left.png'));

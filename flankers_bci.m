@@ -15,7 +15,7 @@ prediction_frequency = 1;
 
 is_test = false;
 
-%% BioSemi triggers
+% BioSemi triggers
 % 120: left good
 % 122: right good
 % 150: left bad
@@ -32,7 +32,7 @@ LibHandle = lsl_loadlib();
 [Streaminfos] = lsl_resolve_all(LibHandle);
 
 if ~is_test
-    %% Init BCI
+    % Init BCI
     
     
     if isempty(Streaminfos)
