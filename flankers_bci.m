@@ -156,7 +156,8 @@ data=nan(nTrials, 4);
 
 DrawFormattedText(window, 'Press any key to start', 'center', 'center', [1 0 0]);
 Screen('Flip', window);
-KbStrokeWait;% Activate robotic hands
+KbStrokeWait;
+% Activate robotic hands
 if ~is_test
     activate(hands);
 end
@@ -261,22 +262,22 @@ for trial = 1:nTrials
     if response==1
         if arrowDirections(1)==1
             outcome = 120;
-            trigger_outlet.push_sample({'120'});
+            trigger_outlet.push_sample({'left_good'});
         else
             outcome = 150;
-            trigger_outlet.push_sample({'150'});
+            trigger_outlet.push_sample({'left_bad'});
         end
     elseif response==2
         if arrowDirections(1)==2
             outcome = 122;
-            trigger_outlet.push_sample({'122'});
+            trigger_outlet.push_sample({'right_good'});
         else
             outcome = 155;
-            trigger_outlet.push_sample({'155'});
+            trigger_outlet.push_sample({'right_bad'});
         end
     else
         outcome = 130;
-        trigger_outlet.push_sample({'130'});
+        trigger_outlet.push_sample({'no_response'});
     end
     
     % Ask if it was the decision they wanted to take
