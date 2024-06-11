@@ -48,7 +48,7 @@ function training(markers,nbtrials_per_marker,cross_delay,arrow_delay,imaginatio
     % Graphics settings
     
     % Here we call some default settings for setting up Psychtoolbox
-    Screen('Preference', 'SkipSyncTests', 1);
+    Screen('Preference', 'SkipSyncTests', 2);
     PsychDefaultSetup(2);
     % Get the screen numbers
     screens = Screen('Screens');
@@ -116,24 +116,24 @@ function training(markers,nbtrials_per_marker,cross_delay,arrow_delay,imaginatio
     while ~strcmp(strcat(KbName(keyCode)),'Return')
         [secs, keyCode, deltaSecs] = KbWait; 
     end
-    
+    vbl = Screen('Flip', window);
     % What we want to do is to simulate nb_trials_per_marker for each hand
     while trial<=length(trials)
         
         marker_outlet.push_sample({'cross'});
+        marker_outlet.push_sample({'rest'});
         % Display fixation cross
         Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
-        vbl = Screen('Flip', window);
+        vbl = Screen('Flip', window, vbl + rest_delay - cycleRefresh/2);
 
         % Displaying Fixation cross + Arrow
-        Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
 
         if  strcmp(trials(trial),'right')
             RectVector = [xCenter , xCenter + Length, xCenter + Length, xCenter; ...
                           yCenter - Width/2, yCenter - Width/2, yCenter + Width/2, yCenter + Width/2];
             TriangleVector = [xCenter + Length, xCenter + 1.2*Length, xCenter + Length; ...
                           yCenter - 1.5*Width/2, yCenter, yCenter + 1.5*Width/2];
-        else if strcmp(trials(trial),'left')
+        elseif strcmp(trials(trial),'left')
             RectVector = [xCenter - Length , xCenter, xCenter, xCenter - Length; ...
                           yCenter - Width/2, yCenter - Width/2, yCenter + Width/2, yCenter + Width/2];
             TriangleVector = [xCenter - Length, xCenter - 1.2*Length, xCenter - Length; ...
@@ -144,27 +144,32 @@ function training(markers,nbtrials_per_marker,cross_delay,arrow_delay,imaginatio
         
         marker = trials(trial);
 
-
+        
         % Draw the arrow
         Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
-        Screen('FillPoly', window, rectColor, RectVector', isConvex);
-        Screen('FillPoly', window, rectColor, TriangleVector', isConvex);
-        % send the marker
-        marker_outlet.push_sample(marker);
-        disp(marker)
+        if strcmp(trials(trial),'right') || strcmp(trials(trial),'left')
+            Screen('FillPoly', window, rectColor, RectVector', isConvex);
+            Screen('FillPoly', window, rectColor, TriangleVector', isConvex);
+        end
+
         vbl = Screen('Flip', window, vbl + cross_delay - cycleRefresh/2);
+        % send the marker
+        marker_outlet.push_sample(marker);        
+        disp(marker)
 
-        % Fixation cross
+        % Fixation cross        
+        Screen('DrawLines', window, allCoords, lineWidthPix, white, [xCenter yCenter], 2);
+
+        vbl = Screen('Flip', window, vbl + arrow_delay - cycleRefresh/2);        
         marker_outlet.push_sample({'imagery'});
+        marker_outlet.push_sample({'rest'});
 
-        Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
-        vbl = Screen('Flip', window, vbl + arrow_delay - cycleRefresh/2);
+        % Pause        
+        Screen('DrawLines', window, allCoords, lineWidthPix, white, [xCenter yCenter], 2);
 
-        % Pause
-        
+        vbl = Screen('Flip', window, vbl + imagination_delay - cycleRefresh/2);        
         marker_outlet.push_sample({'pause'});
-
-        vbl = Screen('Flip', window, vbl + imagination_delay - cycleRefresh/2);
+        
         timerVal1 = tic;
         while toc(timerVal1) < 0.95*rest_delay
              [keyIsDown, secs, keyCode, deltaSecs] = KbCheck(0);
