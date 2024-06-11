@@ -2,7 +2,7 @@ function hands = init_hands()
     % Initialize the robotic hands
     % 
     % Returns:
-    % hands: arduino object
+    % hands: serial port object
 
     % Load the hands configuration
     config = readstruct('hands_config.json');

@@ -1,11 +1,9 @@
 function action(hands, y, outlet)
     % Activate the robotic hand
     % hands: serialport object
-    % outlet: labstreaminglayer outlet
     % y: prediction
-    
+    % outlet: labstreaminglayer outlet
 
-    
     write(hands, 'c', "char"); % Checks if the hands are activated
     disp(readline(hands));
     if nargin == 3

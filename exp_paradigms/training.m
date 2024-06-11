@@ -1,4 +1,4 @@
-function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,imagination_delay,rest_delay,LibHandle,show_feedback_to_user,prediction_frequency)
+function training(markers,nbtrials_per_marker,cross_delay,arrow_delay,imagination_delay,rest_delay,LibHandle,show_feedback_to_user,prediction_frequency)
     % Run an experiment for BCI training
     % Inputs:
     % - markers: cell array of strings, the classes to be trained
@@ -118,7 +118,6 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
     end
     
     % What we want to do is to simulate nb_trials_per_marker for each hand
-    % and label 'rest' the rest of the signal
     while trial<=length(trials)
         
         marker_outlet.push_sample({'cross'});
@@ -134,11 +133,13 @@ function expe_imagination(markers,nbtrials_per_marker,cross_delay,arrow_delay,im
                           yCenter - Width/2, yCenter - Width/2, yCenter + Width/2, yCenter + Width/2];
             TriangleVector = [xCenter + Length, xCenter + 1.2*Length, xCenter + Length; ...
                           yCenter - 1.5*Width/2, yCenter, yCenter + 1.5*Width/2];
-        else
+        else if strcmp(trials(trial),'left')
             RectVector = [xCenter - Length , xCenter, xCenter, xCenter - Length; ...
                           yCenter - Width/2, yCenter - Width/2, yCenter + Width/2, yCenter + Width/2];
             TriangleVector = [xCenter - Length, xCenter - 1.2*Length, xCenter - Length; ...
                           yCenter - 1.5*Width/2, yCenter, yCenter + 1.5*Width/2];
+        else
+            % Rest case: no arrow
         end
         
         marker = trials(trial);

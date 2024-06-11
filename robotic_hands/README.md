@@ -1,25 +1,45 @@
-# Guide d'utilisation des mains robotiques avec Arduino Uno
+# Guide for using robotic hands with Arduino Uno
 
-Arduino Uno est un microcontrolleur qui permet de controller des éléments mécaniques pour créer des systèmes automatiques par exemple. (voir documentation https://www.arduino.cc/en/Guide/ArduinoUno)
+Arduino Uno is a microcontroller that allows you to control mechanical elements to create automated systems, for example. (see documentation https://www.arduino.cc/en/Guide/ArduinoUno)
 
-Après installation des prérequis (IDE Arduino, Pilotes de la carte...), branchez les deux mains robotiques.
+After installing the prerequisites (Arduino IDE, board drivers...), connect the two robotic hands.
 
-## Utilisation avec MATLAB (Librairie Servo)
+## Using with MATLAB (Servo Library)
 
-MATLAB propose des librairies pour utiliser Arduino. En particulier pour se connecter aux ports et pour utiliser les servomoteurs. Il faut installer ces extensions.
+MATLAB provides libraries for using Arduino, particularly for connecting to ports and controlling servomotors. These extensions need to be installed.
 
-### Connexion
+### Connection
 
-Pour se connecter aux mains et créer un objet arduino associé, il faut utiliser la classe arduino() et lui donner en entrée le port USB auquel la carte Uno est branchée ('COM12' par exemple). Ceci peut être vérifié dans votre gestionnaire des périphériques.
-Cette connexion peut être automatisée dans un script.
+To connect to the hands and create an associated Arduino object, you need to use the arduino() class and provide it with the USB port to which the Uno board is connected ('COM12' for example). This can be checked in your device manager. This connection can be automated in a script.
 
-### Utilisation
+### Usage
 
-Chaque servo moteur est assocé à un PinPWM. Pour déplacer le moteur dans une positon précise, il suffit de créer un objet servo() pour chaque doigt et le déplacer à une position avec writePosition() entre 0 et 1. Malheureusement, les positions [0,1] dépendent des branchements et sont donc différentes (extension, tension) pour chaque doigt. La configuration des mains est sauvegardée dans le fichier hand_config.json pour être utilisée automatiquement et changée.
+Each servo motor is associated with a PWM pin. To move the motor to a specific position, you simply need to create a servo() object for each finger and move it to a position using writePosition() between 0 and 1. Unfortunately, the positions [0,1] depend on the wiring and are therefore different (extension, voltage) for each finger. The hand configuration is saved in the hand_config.json file to be used automatically and changed.
 
-### Test
+### Testing
 
-Pour tester le fonctionnement des mains, vous pouvez lancer la fonction test_hands() qui prends en entrée le nom du port usb ('COM12' par exemple). Les doigts sont sensés s'activer du pouce à l'auriculaire, de la main droite à la mains gauche. Chaque doigt est sensé se tendre puis s'etendre.
+To test the operation of the hands, you can run the test_hands() function. The fingers are supposed to activate from thumb to little finger, from right hand to left hand. Each finger is supposed to flex and extend.
 
-Pour tester l'activation des doigts pour appuyer sur une touche d'un clavier, lancez test_activation() qui prends en entrée le nom du port usb.
+
+## Using with an Arduino sketch
+
+The arduino IDE provides a more complex way to deal with the controllers. You can parametrize your board to understand specific commands which makes the control of the robotic hands easier. 
+
+### Connection
+
+To connect to the hands and create the associated serial port object, use the init_hands function. Beforehand, remember to check the config file for the port. It should be initialised when you run set_env. 
+
+### Arduino Sketch and Usage
+
+The sketch written in C++ allows you to implement the given behavior into your arduino controller. A sketch is provided in BCI_robotic_hand.ino. It allows you to write a command to the serial port to:
+- Activate the hands: the hands are ready to move (command 'a')
+- Check if the hands are activated (command 'c')
+- Action the hands: the finger described in the sketch moves (command 'r' for right, 'l' for left)
+- Deactivate the hands: they cannot move (command 'd')
+
+To send a command, you can use the functions implemented or use the write(hands: serialport object, command, type). For example action(hands, y) corresponds to write(hands, y, "char").
+
+### Testing
+
+To test the use of the hands with the arduino sketch, you can run test_activation. It should activate hands, move both fingers, deactivate the hands and try to move both fingers (which should not work).
 

@@ -15,7 +15,7 @@ prediction_frequency = 1;
 
 is_test = false;
 
-%% BioSemi triggers
+% BioSemi triggers
 % 120: left good
 % 122: right good
 % 150: left bad
@@ -32,7 +32,7 @@ LibHandle = lsl_loadlib();
 [Streaminfos] = lsl_resolve_all(LibHandle);
 
 if ~is_test
-    %% Init BCI
+    % Init BCI
     
     
     if isempty(Streaminfos)
@@ -45,6 +45,11 @@ if ~is_test
         [Streaminfos] = lsl_resolve_all(LibHandle);
     end
     disp('The BioSemi is linked to LSL');
+
+    % Initialize the marker stream
+    info = lsl_streaminfo(LibHandle,'MyMarkerStream','Markers',1,0,'cf_string','myuniquesourceid23443');
+    trigger_outlet = lsl_outlet(info);
+    disp('Marker stream initialized');
 
     % Ask for session number
     session_number = input('Session number: ', 's');
@@ -85,10 +90,6 @@ if ~is_test
 
 end
 
-% Initializing connetion to trigger serial port Biosemi
-IOPort('CloseAll');
-port = 'COM4';
-[handle, errmsg] = IOPort('OpenSerialPort', port);
 
 % Set up the keyboard
 KbName('UnifyKeyNames');
@@ -154,7 +155,8 @@ data=nan(nTrials, 4);
 
 DrawFormattedText(window, 'Press any key to start', 'center', 'center', [1 0 0]);
 Screen('Flip', window);
-KbStrokeWait;% Activate robotic hands
+KbStrokeWait;
+% Activate robotic hands
 if ~is_test
     activate(hands);
 end
@@ -168,7 +170,7 @@ for trial = 1:nTrials
     Screen('DrawTexture', window, cross, [],[],0);
     
     % Send cross trigger
-    [nwritten, when, errmsg, prewritetime, postwritetime, lastchecktime] = IOPort('Write', handle, num2str(200));
+    trigger_outlet.push_sample({'cross'});
 
     vbl = Screen('Flip', window, vbl + (afterTrialInterval - 0.5) * ifi);
 
@@ -217,10 +219,11 @@ for trial = 1:nTrials
         end
         Screen('DrawTexture', window, arrow, [], [positions(j, 1)-arrowSizes(j)/2, positions(j, 2)-arrowSizes(j)/2, positions(j, 1)+arrowSizes(j)/2, positions(j, 2)+arrowSizes(j)/2]);
     end
+    
     % Send stimulus trigger
-    [nwritten, when, errmsg, prewritetime, postwritetime, lastchecktime] = IOPort('Write', handle, num2str(201));
+    trigger_outlet.push_sample({'stimulus'});
 
-    vbl = Screen('Flip', window, postwritetime);
+    vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
     
     % Wait for the hand activation
     Screen('FillRect', window, grey);
@@ -258,22 +261,22 @@ for trial = 1:nTrials
     if response==1
         if arrowDirections(1)==1
             outcome = 120;
-            [nwritten, when, errmsg, prewritetime, postwritetime, lastchecktime] = IOPort('Write', handle, num2str(120));
+            trigger_outlet.push_sample({'left_good'});
         else
             outcome = 150;
-            [nwritten, when, errmsg, prewritetime, postwritetime, lastchecktime] = IOPort('Write', handle, num2str(150));
+            trigger_outlet.push_sample({'left_bad'});
         end
     elseif response==2
         if arrowDirections(1)==2
             outcome = 122;
-            [nwritten, when, errmsg, prewritetime, postwritetime, lastchecktime] = IOPort('Write', handle, num2str(122));
+            trigger_outlet.push_sample({'right_good'});
         else
             outcome = 155;
-            [nwritten, when, errmsg, prewritetime, postwritetime, lastchecktime] = IOPort('Write', handle, num2str(155));
+            trigger_outlet.push_sample({'right_bad'});
         end
     else
         outcome = 130;
-        [nwritten, when, errmsg, prewritetime, postwritetime, lastchecktime] = IOPort('Write', handle, num2str(130));
+        trigger_outlet.push_sample({'no_response'});
     end
     
     % Ask if it was the decision they wanted to take
@@ -324,9 +327,10 @@ for trial = 1:nTrials
     end
 
     % Fixation cross
+
+    Screen('DrawTexture', window, cross, [],[],0);    
     vbl = Screen('Flip', window, vbl + (check_decision_duration - 0.5) * ifi);
-    Screen('DrawTexture', window, cross, [],[],0);
-    vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
+    
 
     % Show feedback
     if outcome == 120
@@ -355,8 +359,8 @@ for trial = 1:nTrials
     end
     
     % Send trigger for feedback
-    [nwritten, when, errmsg, prewritetime, postwritetime, lastchecktime] = IOPort('Write', handle, num2str(202));
-    vbl = Screen('Flip', window, postwritetime);
+    trigger_outlet.push_sample({'feedback'});
+    vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
 
     %% Show the arrows and circle the biggest one
     for j=1:nArrows
@@ -374,7 +378,7 @@ for trial = 1:nTrials
     % Circle the biggest arrow, the first one
     Screen('FrameOval', window, white, [positions(1, 1)-arrowSizes(1)/2 - 20, positions(1, 2)-arrowSizes(1)/2 - 20, positions(1, 1) + arrowSizes(1)/2 + 20, positions(1, 2)+ arrowSizes(1)/2 + 20], 10);
 
-    vbl = Screen('Flip', window, vbl + (afterTrialInterval - 0.5) * ifi);
+    vbl = Screen('Flip', window, vbl + (feedback_duration - 0.5) * ifi);
 
     % Store the data
     data(trial, 1) = trials(trial);

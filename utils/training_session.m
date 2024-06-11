@@ -59,7 +59,7 @@ function training_session(previousModel, testedHand, nbTrialsPerHand, crossDelay
     end
 
     %% Experiment
-    expe_imagination(markers,nbTrialsPerHand,crossDelay,arrowDelay,imaginationDelay,restDelay,LibHandle,show_feedback_to_user,predictionFrequency);
+    training(markers,nbTrialsPerHand,crossDelay,arrowDelay,imaginationDelay,restDelay,LibHandle,show_feedback_to_user,predictionFrequency);
 
     %% Clear
     % lib = lsl_resolve_all(LibHandle);
