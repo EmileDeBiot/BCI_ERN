@@ -43,12 +43,15 @@ void loop() {
     }
     // check if the hands are ready
     else if (cmd == 'c'){
-      if (is_ready) {
+      if (is_ready){
         Serial.println("Ready for movement.");
       }
       else{
         Serial.println("The fingers are deactivated. Use activate function before you want to do a movement.");
       }
+    }
+    else if (cmd == 't'){
+      test();
     }
     // move a finger
     else actuateFinger(cmd);
