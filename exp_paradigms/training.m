@@ -145,15 +145,18 @@ function training(markers,nbtrials_per_marker,cross_delay,arrow_delay,imaginatio
         marker = trials(trial);
 
         
-        % Draw the arrow
+        % Draw the cross
         Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
+
+        % Draw the arrow
         if strcmp(trials(trial),'right') || strcmp(trials(trial),'left')
             Screen('FillPoly', window, rectColor, RectVector', isConvex);
             Screen('FillPoly', window, rectColor, TriangleVector', isConvex);
         end
 
         vbl = Screen('Flip', window, vbl + cross_delay - cycleRefresh/2);
-        % send the marker
+        
+        % send the target marker
         marker_outlet.push_sample(marker);        
         disp(marker)
 

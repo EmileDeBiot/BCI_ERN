@@ -10,10 +10,24 @@ resource_path = 'data/resources/';
 
 global_model_file = 'P1_HR_T1_model.mat';
 
+% Ask for session number
+session_number = input('Session number: ', 's');
+
+% Ask for participant number
+participant_number = input('Participant number: ', 's');
+
+% Generate the flanker stimuli
+nTrials = 10;
+rCongruent = 0.2;
+rIncongruent = 0.3;
+rRandom = 0.4;
+rNeutral = 0.1;
+trials = flankersCloud(rCongruent, rIncongruent, rRandom, rNeutral, nTrials);
+
 cap = 64;
 prediction_frequency = 1;
 
-is_test = false;
+is_test = true;
 
 % BioSemi triggers
 % 120: left good
@@ -46,22 +60,6 @@ if ~is_test
     end
     disp('The BioSemi is linked to LSL');
 
-    % Initialize the marker stream
-    info = lsl_streaminfo(LibHandle,'MyMarkerStream','Markers',1,0,'cf_string','myuniquesourceid23443');
-    trigger_outlet = lsl_outlet(info);
-    disp('Marker stream initialized');
-
-    % Ask for session number
-    session_number = input('Session number: ', 's');
-
-    % Ask for participant number
-    participant_number = input('Participant number: ', 's');
-
-    % Open recorder
-    cd LabRecorder
-    system('LabRecorder.exe -c my_config.cfg &');
-    cd ..;
-    pause(10);
     %% Visualization
     vis_stream('BioSemi',10,5,150,1:1+cap+8,100,10);
 
@@ -90,11 +88,22 @@ if ~is_test
 
 end
 
+% Initialize the marker stream
+info = lsl_streaminfo(LibHandle,'MyMarkerStream','Markers',1,0,'cf_string','myuniquesourceid23443');
+trigger_outlet = lsl_outlet(info);
+disp('Marker stream initialized');
+
+% Open recorder
+cd LabRecorder
+system('LabRecorder.exe -c my_config.cfg &');
+cd ..;
+pause(10);
+
 
 % Set up the keyboard
 KbName('UnifyKeyNames');
 escapeKey=KbName('ESCAPE');
-leftKey=KbName('LeftArrow');
+leftKey=KbName('Space');
 rightKey=KbName('RightArrow');
 
 % PTB setup for flankersCloud task
@@ -137,13 +146,6 @@ decision_duration = round(5/ifi);
 check_decision_duration = round(2/ifi);
 press_duration = 4;
 
-% Generate the flanker stimuli
-rCongruent = 0.25;
-rIncongruent = 0.25;
-rRandom = 0.25;
-rNeutral = 0.25;
-nTrials = 2;
-trials = flankersCloud(rCongruent, rIncongruent, rRandom, rNeutral, nTrials);
 
 % Set up the timing
 interTrialInterval=1;
@@ -192,17 +194,17 @@ for trial = 1:nTrials
     % Initializing the directions of the arrows
     random=randi(2);
     if trials(trial)==1
-        arrowDirections=random*ones(1, nArrows); % All arrows in the same direction
+        arrowDirections=random*ones(1, nArrows); % All arrows in the same direction / Congruent
     elseif trials(trial)==2
         if random==1
-            arrowDirections=[1 2*ones(1, nArrows-1)]; % All arrows in the same direction except the first one
+            arrowDirections=[1 2*ones(1, nArrows-1)]; % All arrows in the same direction except the first one / Incongruent
         else
             arrowDirections=[2 1*ones(1, nArrows-1)];
         end
     elseif trials(trial)==3
-        arrowDirections=randi(2, 1, nArrows); % Random directions
+        arrowDirections=randi(2, 1, nArrows); % Random directions / Random
     elseif trials(trial)==4
-        arrowDirections=randi(2, 1, nArrows); % Random direction for the middle arrow, other arrows will be replaced by neutral symbols
+        arrowDirections=[randi(2) 3*ones(1, nArrows-1)]; % Random direction for the middle arrow, other arrows will be replaced by neutral symbols
     end
 
 
@@ -212,8 +214,12 @@ for trial = 1:nTrials
             [img, ~, alpha]=imread(strcat(resource_path,'left.png'));
             img(:,:,4) = alpha;
             arrow=Screen('MakeTexture', window, img);
-        else
+        elseif arrowDirections(j)==2
             [img, ~, alpha]=imread(strcat(resource_path,'right.png'));
+            img(:,:,4) = alpha;
+            arrow=Screen('MakeTexture', window, img);
+        else
+            [img, ~, alpha]=imread(strcat(resource_path,'neutral.png'));
             img(:,:,4) = alpha;
             arrow=Screen('MakeTexture', window, img);
         end
@@ -392,10 +398,8 @@ for trial = 1:nTrials
 end
 
 % save the data
-if ~is_test
-    filename = strcat(data_path, 'S', session_number, '_P', participant_number, '.mat');
-    save(filename, 'data');
-end
+filename = strcat(result_path, 'S', session_number, '_P', participant_number, '.mat');
+save(filename, 'data');
 onl_clear;
 sca;
 close all;
