@@ -1,7 +1,6 @@
 % Clear the workspace and the screen
 close all;
 clear;
-sca;
 
 data_path = 'data/data/';
 model_path = 'data/models/';
@@ -11,7 +10,7 @@ resource_path = 'data/resources/';
 cap = 64;
 prediction_frequency = 1;
 
-is_test = false;
+is_test = true;
 
 % BioSemi triggers (not used at the moment)
 % 120: left good
@@ -27,6 +26,18 @@ is_test = false;
 LibHandle = lsl_loadlib();
 [Streaminfos] = lsl_resolve_all(LibHandle);
 
+
+% Ask for participant number
+participant_number = input('Participant number: ', 's');
+
+filename = strcat(result_path, 'P_', participant_number, '.mat');
+
+% Initialize the marker stream
+info = lsl_streaminfo(LibHandle,'MyMarkerStream','Markers',1,0,'cf_string','myuniquesourceid23443');
+trigger_outlet = lsl_outlet(info);
+disp('Marker stream initialized');
+
+
 if ~is_test
     if isempty(Streaminfos)
         cd BioSemi
@@ -39,39 +50,28 @@ if ~is_test
     end
     disp('The BioSemi is linked to LSL');
 
-    % Initialize the marker stream
-    info = lsl_streaminfo(LibHandle,'MyMarkerStream','Markers',1,0,'cf_string','myuniquesourceid23443');
-    trigger_outlet = lsl_outlet(info);
-    disp('Marker stream initialized');
-
-    % Ask for session number
-    session_number = input('Session number: ', 's');
-
-    % Ask for participant number
-    participant_number = input('Participant number: ', 's');
-
-    % Open recorder
-    cd LabRecorder
-    system('LabRecorder.exe -c my_config.cfg &');
-    cd ..;
-    pause(10);
     %% Visualization
     vis_stream('BioSemi',10,5,150,1:1+cap+8,100,10);
 
 end
 
+% Open recorder
+cd LabRecorder
+system('LabRecorder.exe -c my_config.cfg &');
+cd ..;
+pause(1);
 
 % Set up the keyboard
 KbName('UnifyKeyNames');
 escapeKey=KbName('ESCAPE');
-leftKey=KbName('LeftArrow');
+leftKey=KbName('Space');
 rightKey=KbName('RightArrow');
 
 % PTB setup for flankersCloud task
 
-Screen('Preference', 'SkipSyncTests', 0);
+Screen('Preference', 'SkipSyncTests', 2);
 
-opacity = 0.8;
+opacity = 1;
 PsychDebugWindowConfiguration([], opacity)
 
 % Initialize grey
@@ -79,7 +79,7 @@ white = WhiteIndex(0);
 black = BlackIndex(0);
 grey = white / 2;
 % Open the screen
-[window, windowRect] = PsychImaging('OpenWindow', 1, grey);
+[window, windowRect] = PsychImaging('OpenWindow', 2, grey);
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 
 
@@ -100,7 +100,7 @@ Screen('TextSize', window, 50);
 
 % Set the duration of the stimuli
 cross_duration = round(1.5/ifi);
-flanker_duration = round(0.3/ifi);
+flanker_duration = round(0.2/ifi);
 afterTrialInterval = round(2/ifi);
 feedback_duration = round(1/ifi);
 decision_duration = round(5/ifi);
@@ -108,11 +108,11 @@ check_decision_duration = round(2/ifi);
 press_duration = 4;
 
 % Generate the flanker stimuli
-rCongruent = 0.25;
-rIncongruent = 0.25;
-rRandom = 0.25;
-rNeutral = 0.25;
-nTrials = 2;
+rCongruent = 0.05;
+rIncongruent = 0.45;
+rRandom = 0.5;
+rNeutral = 0.0;
+nTrials = 60;
 trials = flankersCloud(rCongruent, rIncongruent, rRandom, rNeutral, nTrials);
 
 % Set up the timing
@@ -121,29 +121,47 @@ interTrialInterval=1;
 % Set up the data
 data=nan(nTrials, 4);
 
+% make textures
+% Fixation cross
+[img, ~, alpha]=imread(strcat(resource_path,'cross.png'));
+img(:,:,4) = alpha;
+cross = Screen('MakeTexture', window, img);
+
+% Arrows
+[img, ~, alpha]=imread(strcat(resource_path,'left.png'));
+img(:,:,4) = alpha;
+left_arrow = Screen('MakeTexture', window, img);
+
+[img, ~, alpha]=imread(strcat(resource_path,'right.png'));
+img(:,:,4) = alpha;
+right_arrow = Screen('MakeTexture', window, img);
+
+[img, ~, alpha]=imread(strcat(resource_path,'neutral.png'));
+img(:,:,4) = alpha;
+neutral_arrow = Screen('MakeTexture', window, img);
+
+% feedback
+[img, ~, alpha]=imread(strcat(resource_path,'check.png'));
+img(:,:,4) = alpha;
+check = Screen('MakeTexture', window, img);
+
+[img, ~, alpha]=imread(strcat(resource_path,'wrong.png'));
+img(:,:,4) = alpha;
+wrong = Screen('MakeTexture', window, img);
 
 
-DrawFormattedText(window, 'Press any key to start', 'center', 'center', [1 0 0]);
+DrawFormattedText(window, 'Press any key to start', 'center', 'center', white);
 Screen('Flip', window);
-KbStrokeWait;% Activate robotic hands
+KbStrokeWait;
 vbl = Screen('Flip', window); % initial flip
 % Run the flankers tasks
 for trial = 1:nTrials
     % Fixation cross
-    [img, ~, alpha]=imread(strcat(resource_path,'cross.png'));
-    img(:,:,4) = alpha;
-    cross = Screen('MakeTexture', window, img);
     Screen('DrawTexture', window, cross, [],[],0);
     
-    % Send cross trigger
-    trigger_outlet.push_sample({'cross'});
-
-    vbl = Screen('Flip', window, vbl + (afterTrialInterval - 0.5) * ifi);
-
     nArrows = randi([8,15]);
-    arrowSizes = randperm(15, nArrows)*10;
+    arrowSizes = (randperm(15, nArrows)+7)*7;
     arrowSizes = sort(arrowSizes, 'descend');
-    margin=300;
     indices = randperm(20,nArrows);
 
     % Initializing the positions of the arrows
@@ -168,27 +186,27 @@ for trial = 1:nTrials
     elseif trials(trial)==3
         arrowDirections=randi(2, 1, nArrows); % Random directions
     elseif trials(trial)==4
-        arrowDirections=randi(2, 1, nArrows); % Random direction for the middle arrow, other arrows will be replaced by neutral symbols
+        arrowDirections=[randi(2) 3*ones(1, nArrows-1)]; % Random direction for the middle arrow, other arrows will be replaced by neutral symbols
     end
-
+    
+    % Send cross trigger
+    trigger_outlet.push_sample({'cross'});
+    % Display the cross
+    vbl = Screen('Flip', window, vbl + (afterTrialInterval - 0.5) * ifi);
 
     % Flanker stimuli
     for j=1:nArrows
         if arrowDirections(j)==1
-            [img, ~, alpha]=imread(strcat(resource_path,'left.png'));
-            img(:,:,4) = alpha;
-            arrow=Screen('MakeTexture', window, img);
+            Screen('DrawTexture', window, left_arrow, [], [positions(j, 1)-arrowSizes(j)/2, positions(j, 2)-arrowSizes(j)/2, positions(j, 1)+arrowSizes(j)/2, positions(j, 2)+arrowSizes(j)/2]);
+        elseif arrowDirections(j)==2
+            Screen('DrawTexture', window, right_arrow, [], [positions(j, 1)-arrowSizes(j)/2, positions(j, 2)-arrowSizes(j)/2, positions(j, 1)+arrowSizes(j)/2, positions(j, 2)+arrowSizes(j)/2]);
         else
-            [img, ~, alpha]=imread(strcat(resource_path,'right.png'));
-            img(:,:,4) = alpha;
-            arrow=Screen('MakeTexture', window, img);
-        end
-        Screen('DrawTexture', window, arrow, [], [positions(j, 1)-arrowSizes(j)/2, positions(j, 2)-arrowSizes(j)/2, positions(j, 1)+arrowSizes(j)/2, positions(j, 2)+arrowSizes(j)/2]);
+            Screen('DrawTexture', window, neutral_arrow, [], [positions(j, 1)-arrowSizes(j)/2, positions(j, 2)-arrowSizes(j)/2, positions(j, 1)+arrowSizes(j)/2, positions(j, 2)+arrowSizes(j)/2]);
+        end    
     end
     % Send stimulus trigger
     trigger_outlet.push_sample({'stim'});
-
-    vbl = Screen('Flip', window, postwritetime);
+    vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
     
     % Wait for the hand activation
     Screen('FillRect', window, grey);
@@ -197,7 +215,7 @@ for trial = 1:nTrials
     % Ask for the decision
     Screen('TextSize', window, 70);
     DrawFormattedText(window, 'Make your move!', 'center',...
-        height * 0.50, [1 0 0]);
+        height * 0.50, white);
     
     vbl = Screen('Flip', window, vbl + (flanker_duration - 0.5) * ifi);
 
@@ -209,6 +227,7 @@ for trial = 1:nTrials
             if keyCode(escapeKey)
                 onl_clear;
                 sca;
+                save_data(data, filename);
                 close all;
                 return
             elseif keyCode(leftKey)
@@ -245,36 +264,33 @@ for trial = 1:nTrials
     
     % Ask if it was the decision they wanted to take
     Screen('TextSize', window, 70);
-    if outcome == 120 || outcome == 50
-        [img, ~, alpha]=imread(strcat(resource_path,'left.png'));
-        img(:,:,4) = alpha;
-        arrow = Screen('MakeTexture', window, img);
+    if outcome == 120 || outcome == 150
+        arrow = left_arrow;
         DrawFormattedText(window, 'You chose', 'center',...
-            height * 0.25, [1 0 0]);
+            height * 0.25, white);
     elseif outcome == 122 || outcome == 155
-        [img, ~, alpha]=imread(strcat(resource_path,'right.png'));
-        img(:,:,4) = alpha;
-        arrow = Screen('MakeTexture', window, img);
+        arrow = right_arrow;
         DrawFormattedText(window, 'You chose', 'center',...
-            height * 0.25, [1 0 0]);
+            height * 0.25, white);
     elseif outcome == 130
         DrawFormattedText(window, 'No response', 'center',...
-            height * 0.25, [1 0 0]);
+            height * 0.25, white);
     end
     DrawFormattedText(window, 'Was it the decision you wanted to make?', 'center',...
-        height * 0.50, [1 0 0]);
+        height * 0.50, white);
     DrawFormattedText(window, 'Yes (y) or No (n)', 'center',...
-        height * 0.75, [1 0 0]);
+        height * 0.75, white);
     if outcome ~= 130
         Screen('DrawTexture', window, arrow, [], [width/2 + 200, height * 0.25 - 75, width/2+300, height * 0.25 + 25]);
     end
     Screen('Flip', window, vbl + (decision_duration - 0.5) * ifi);
-
+    
     while true
         [keyIsDown, tEnd, keyCode]=KbCheck;
         if keyIsDown
             if keyCode(escapeKey)
                 sca;
+                save_data(data, filename);
                 close all;
                 return
             elseif keyCode(KbName('y'))
@@ -284,59 +300,48 @@ for trial = 1:nTrials
             end
         end
     end
-
+    vbl = Screen('Flip', window);
     % Fixation cross
-    vbl = Screen('Flip', window, vbl + (check_decision_duration - 0.5) * ifi);
     Screen('DrawTexture', window, cross, [],[],0);
     vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
 
     % Show feedback
     if outcome == 120
-        [img, ~, alpha]=imread(strcat(resource_path,'check.png'));
-        img(:,:,4) = alpha;
-        feedback = Screen('MakeTexture', window, img);
+        feedback = check;
         Screen('DrawTexture', window, feedback, [],[],0);
     elseif outcome == 150
-        [img, ~, alpha]=imread(strcat(resource_path,'wrong.png'));
-        img(:,:,4) = alpha;
-        feedback = Screen('MakeTexture', window, img);
+        feedback = wrong;
         Screen('DrawTexture', window, feedback, [],[],0);
     elseif outcome == 122
-        [img, ~, alpha]=imread(strcat(resource_path,'check.png'));
-        img(:,:,4) = alpha;
-        feedback = Screen('MakeTexture', window, img);
+        feedback = check;
         Screen('DrawTexture', window, feedback, [],[],0);
     elseif outcome == 155
-        [img, ~, alpha]=imread(strcat(resource_path,'wrong.png'));
-        img(:,:,4) = alpha;
-        feedback = Screen('MakeTexture', window, img);
+        feedback = wrong;
         Screen('DrawTexture', window, feedback, [],[],0);
     else
         DrawFormattedText(window, 'No response', 'center',...
-            height * 0.50, [1 0 0]);
+            height * 0.50, white);
     end
     
     % Send trigger for feedback
     trigger_outlet.push_sample({'feedback'});
-    vbl = Screen('Flip', window, postwritetime);
+    vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
 
     % Show the arrows and circle the biggest one
     for j=1:nArrows
         if arrowDirections(j)==1
-            [img, ~, alpha]=imread(strcat(resource_path,'left.png'));
-            img(:,:,4) = alpha;
-            arrow=Screen('MakeTexture', window, img);
+            Screen('DrawTexture', window, left_arrow, [], [positions(j, 1)-arrowSizes(j)/2, positions(j, 2)-arrowSizes(j)/2, positions(j, 1)+arrowSizes(j)/2, positions(j, 2)+arrowSizes(j)/2]);
+        elseif arrowDirections(j)==2
+            Screen('DrawTexture', window, right_arrow, [], [positions(j, 1)-arrowSizes(j)/2, positions(j, 2)-arrowSizes(j)/2, positions(j, 1)+arrowSizes(j)/2, positions(j, 2)+arrowSizes(j)/2]);
         else
-            [img, ~, alpha]=imread(strcat(resource_path,'right.png'));
-            img(:,:,4) = alpha;
-            arrow=Screen('MakeTexture', window, img);
+            Screen('DrawTexture', window, neutral_arrow, [], [positions(j, 1)-arrowSizes(j)/2, positions(j, 2)-arrowSizes(j)/2, positions(j, 1)+arrowSizes(j)/2, positions(j, 2)+arrowSizes(j)/2]);
         end
-        Screen('DrawTexture', window, arrow, [], [positions(j, 1)-arrowSizes(j)/2, positions(j, 2)-arrowSizes(j)/2, positions(j, 1)+arrowSizes(j)/2, positions(j, 2)+arrowSizes(j)/2]);
+        
     end
     % Circle the biggest arrow, the first one
     Screen('FrameOval', window, white, [positions(1, 1)-arrowSizes(1)/2 - 20, positions(1, 2)-arrowSizes(1)/2 - 20, positions(1, 1) + arrowSizes(1)/2 + 20, positions(1, 2)+ arrowSizes(1)/2 + 20], 10);
 
-    vbl = Screen('Flip', window, vbl + (afterTrialInterval - 0.5) * ifi);
+    vbl = Screen('Flip', window, vbl + (feedback_duration - 0.5) * ifi);
 
     % Store the data
     data(trial, 1) = trials(trial);
@@ -346,10 +351,11 @@ for trial = 1:nTrials
 
 end
 
-% save the data
-if ~is_test
-    filename = strcat(data_path, 'S', session_number, '_P', participant_number, '_realhand', '.mat');
-    save(filename, 'data');
-end
+
+save_data(data, filename);
 sca;
 close all;
+
+function save_data(data, filename)
+    save(filename, 'data');
+end
