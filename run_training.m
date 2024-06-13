@@ -5,6 +5,7 @@ params = struct('ID', 'P1_HR_T1', ...
                 'previousModel2', '', ...
                 'testedHand', 'both', ...
                 'nbTrialsPerHand', 20, ...
+                'isTest', false, ...
                 'crossDelay', 3000, ...
                 'arrowDelay', 3000, ...
                 'imaginationDelay', 2000, ...
@@ -20,11 +21,11 @@ open_window_1(params);
 
 function open_window_1(params)
     % Create the main window
-    f = uifigure('Name', 'Experience parameters', 'Position', [200, 200, 840, 220], 'Resize', 'off');
+    f = uifigure('Name', 'Experience parameters', 'Position', [200, 200, 840, 250], 'Resize', 'off');
     
     % Creating labels
-    uilabel(f, 'Text', 'ID: ', 'Position', [10, 195, 100, 20]);
-    uilabel(f, 'Text', 'Previous Model: ', 'Position', [10, 160, 90, 20]);
+    uilabel(f, 'Text', 'ID: ', 'Position', [10, 220, 100, 20]);
+    uilabel(f, 'Text', 'Previous Model: ', 'Position', [10, 195, 90, 20]);
     uilabel(f, 'Text', 'Tested hand', 'Position', [10, 135, 80, 20]);
     uilabel(f, 'Text', 'Nb trial per hand', 'Position', [5, 55, 90, 20]);
     uilabel(f, 'Text', 'Cross delay:', 'Position', [110, 135, 100, 20]);
@@ -32,6 +33,7 @@ function open_window_1(params)
     uilabel(f, 'Text', 'Imagination delay:', 'Position', [110, 85, 100, 20]);
     uilabel(f, 'Text', 'Rest delay:', 'Position', [110, 60, 100, 20]);
     uilabel(f, 'Text', 'Prediction frequency:', 'Position', [109, 35, 102, 20]);
+    uilabel(f, 'Text', 'Is test', 'Position', [110, 160, 100, 20]);
     uilabel(f, 'Text', 'Files:', 'Position', [335, 165, 80, 20]);
     uilabel(f, 'Text', 'File:', 'Position', [450, 140, 80, 20]);
     uilabel(f, 'Text', 'Model file:', 'Position', [650, 140, 80, 20]);
@@ -39,8 +41,8 @@ function open_window_1(params)
     
     % Creating text areas
     eFiles                 = uitextarea(f, 'Position', [320, 35, 110, 130], 'Value', params.files,'Editable', 'Off');
-    eID                    = uitextarea(f, 'Position', [110, 195, 180, 20], 'Value', params.ID);
-    ePreviousModel         = uitextarea(f, 'Position', [120, 165, 180, 20], 'Value', params.previousModel );
+    eID                    = uitextarea(f, 'Position', [110, 220, 180, 20], 'Value', params.ID);
+    ePreviousModel         = uitextarea(f, 'Position', [110, 195, 180, 20], 'Value', params.previousModel );
     eNbTrialsPerHand       = uitextarea(f, 'Position', [10, 35, 80, 20], 'Value', num2str(params.nbTrialsPerHand));
     eCrossDelay            = uitextarea(f, 'Position', [220, 135, 80, 20], 'Value', num2str(params.crossDelay));
     eArrowDelay            = uitextarea(f, 'Position', [220, 110, 80, 20], 'Value', num2str(params.arrowDelay));
@@ -66,6 +68,9 @@ function open_window_1(params)
         vbLeft = false;
         vbBoth = true;
     end
+
+    % Creating checkboxees
+    eIsTest = uicontrol(f,'Style', 'checkbox', "Position", [220, 160, 80, 20], 'Value', params.isTest);
     
     bRight      = uiradiobutton(bTestedHand, 'Position', [5, 38, 70, 19], 'Text', 'Right', 'Value', vbRight);
     bLeft       = uiradiobutton(bTestedHand, 'Position', [5, 19, 70, 19], 'Text', 'Left', 'Value', vbLeft);
@@ -84,7 +89,8 @@ function open_window_1(params)
                                        eFiles, ...
                                        eFile,...
                                        eModelFile,...
-                                       eOtherFile});
+                                       eOtherFile,...
+                                       eIsTest});
     bTrainingModel = uibutton(f, 'push', 'Text', 'Training Model', 'Position', [330, 5, 90, 20]);
     set(bTrainingModel, 'ButtonPushedFcn', {@cbTrainingModel, ...
                                      f, ...
@@ -130,7 +136,7 @@ function open_window_1(params)
 end
 
 % Fonction de callback du bouton start
-function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossDelay, eArrowDelay, eImaginationDelay, eRestDelay, ePredictionFrequency, bRight, bLeft, bBoth, eFiles, eFile, eModelFile, eOtherFile)
+function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossDelay, eArrowDelay, eImaginationDelay, eRestDelay, ePredictionFrequency, bRight, bLeft, bBoth, eFiles, eFile, eModelFile, eOtherFile, eIsTest)
     % Start the training session
     % Inputs:
     %   ~: unused
@@ -151,6 +157,7 @@ function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCros
     %   eFile: file
     %   eModelFile: model file
     %   eOtherFile: other file
+    %   eIsTest: checkbox that indicates if it's a test or not
     
     data_path = 'data/data/';  
     % V�rification des Parameters + sauvegarde
@@ -211,7 +218,9 @@ function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCros
     elseif get(bBoth, 'Value')
         params.testedHand = 'both';
     end
-    
+
+    params.isTest = get(eIsTest, 'Value');
+    disp(params.isTest);
     
     
     params.file                    = get(eFile, 'Value');
@@ -221,7 +230,7 @@ function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCros
     
     close(f);
     disp('Training Session');
-    training_session(params.previousModel, params.testedHand, params.nbTrialsPerHand, params.crossDelay, params.arrowDelay, params.imaginationDelay, params.restDelay, params.predictionFrequency);
+    training_session(params.previousModel, params.testedHand, params.nbTrialsPerHand, params.crossDelay, params.arrowDelay, params.imaginationDelay, params.restDelay, params.predictionFrequency, params.isTest);
 
     % update the files for training the model
     matchResult = regexp(params.ID, '.*_.*_T(\d+)', 'tokens');
