@@ -90,9 +90,13 @@ function training(markers,nbtrials_per_marker,cross_delay,arrow_delay,imaginatio
     allCoords = [xCoords; yCoords];
     % Set the line width for our fixation cross
     lineWidthPix = 4;
-    % Set the dimensions of the arrow
-    Width = fixCrossDimPix*0.25;
-    Length = fixCrossDimPix*0.5;
+    % Set the dimensions of the hands
+    side = screenXpixels/4;
+    % Set the positions of the hands
+    xLeftHand = xCenter - fixCrossDimPix - side;
+    xRightHand = xCenter + fixCrossDimPix;
+    yHands = yCenter - side/2;
+
     % Set the color of the rect to red and feedback to green
     rectColor = [1 0 0];
     feedbackColor = [0 1 0];
@@ -110,6 +114,16 @@ function training(markers,nbtrials_per_marker,cross_delay,arrow_delay,imaginatio
     % vbl = Screen('Flip', window);
     trial = 1;
     
+    % make textures
+    [img, ~, alpha] = imread('data/resources/left_hand.png');
+    img(:,:,4) = alpha;
+    left_hand = Screen('MakeTexture', window, img);
+
+    [img, ~, alpha] = imread('data/resources/right_hand.png');
+    img(:,:,4) = alpha;
+    right_hand = Screen('MakeTexture', window, img);
+
+
     DrawFormattedText(window, 'Ready?', 'center', 'center', [54,54,54]);
     Screen('Flip', window);
     [secs, keyCode, deltaSecs] = KbWait;
@@ -129,15 +143,11 @@ function training(markers,nbtrials_per_marker,cross_delay,arrow_delay,imaginatio
         % Displaying Fixation cross + Arrow
 
         if  strcmp(trials(trial),'right')
-            RectVector = [xCenter , xCenter + Length, xCenter + Length, xCenter; ...
-                          yCenter - Width/2, yCenter - Width/2, yCenter + Width/2, yCenter + Width/2];
-            TriangleVector = [xCenter + Length, xCenter + 1.2*Length, xCenter + Length; ...
-                          yCenter - 1.5*Width/2, yCenter, yCenter + 1.5*Width/2];
+            hand = right_hand;
+            Screen('DrawTexture', window, hand, [], [xRightHand yHands xRightHand+side yHands+side], 0, 0);
         elseif strcmp(trials(trial),'left')
-            RectVector = [xCenter - Length , xCenter, xCenter, xCenter - Length; ...
-                          yCenter - Width/2, yCenter - Width/2, yCenter + Width/2, yCenter + Width/2];
-            TriangleVector = [xCenter - Length, xCenter - 1.2*Length, xCenter - Length; ...
-                          yCenter - 1.5*Width/2, yCenter, yCenter + 1.5*Width/2];
+            hand = left_hand;
+            Screen('DrawTexture', window, hand, [], [xLeftHand yHands xLeftHand+side yHands+side], 0, 0);
         else
             % Rest case: no arrow
         end
@@ -148,11 +158,6 @@ function training(markers,nbtrials_per_marker,cross_delay,arrow_delay,imaginatio
         % Draw the cross
         Screen('DrawLines', window, allCoords,lineWidthPix, white, [xCenter yCenter], 2);
 
-        % Draw the arrow
-        if strcmp(trials(trial),'right') || strcmp(trials(trial),'left')
-            Screen('FillPoly', window, rectColor, RectVector', isConvex);
-            Screen('FillPoly', window, rectColor, TriangleVector', isConvex);
-        end
 
         vbl = Screen('Flip', window, vbl + cross_delay - cycleRefresh/2);
         
@@ -180,7 +185,6 @@ function training(markers,nbtrials_per_marker,cross_delay,arrow_delay,imaginatio
                  trial = length(trials)+1;
              end
         end
-        vbl = Screen('Flip', window, vbl + rest_delay - cycleRefresh/2);
         trial = trial + 1;
         disp(trial);
     end

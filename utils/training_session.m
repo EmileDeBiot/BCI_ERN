@@ -1,4 +1,4 @@
-function training_session(previousModel, testedHand, nbTrialsPerHand, crossDelay, arrowDelay, imaginationDelay, restDelay, predictionFrequency)
+function training_session(previousModel, testedHand, nbTrialsPerHand, crossDelay, arrowDelay, imaginationDelay, restDelay, predictionFrequency, isTest)
     % training_session: Run a training session with the given hand
     %   previousModel: The previous model to use
     %   testedHand: The hand to test
@@ -8,35 +8,40 @@ function training_session(previousModel, testedHand, nbTrialsPerHand, crossDelay
     %   imaginationDelay: The delay between the imagination and the rest
     %   restDelay: The delay between the rest and the cross
     %   predictionFrequency: The prediction frequency
+    %   isTest: If the session is a test session
     
     model_path = 'data/models/';
     
     cap = 64;
     if strcmp(testedHand, 'both')
-        markers = {'left', 'right','rest'};
+        markers = {'left', 'right'};
     else
-        markers = {testedHand, 'rest'};
+        markers = {testedHand};
     end
     show_feedback_to_user = false; % ok only for (rest vs) right and left vs (rest vs) right
     
     %% Init
 
     % load BCILAB
-    init_bci_lab;
-
-    % Open Biosemi to LSL connection
+    init_bci_lab;        
+    
     LibHandle = lsl_loadlib();
     [Streaminfos] = lsl_resolve_all(LibHandle);
-    if isempty(Streaminfos)
-        cd BioSemi
-        system(strcat('BioSemi.exe -c my_config',num2str(cap),'.cfg &'));
-        cd ..
-        disp('Waiting for you to connect the BioSemi to LSL...');
+
+    if ~isTest
+        % Open Biosemi to LSL connection
+
+        if isempty(Streaminfos)
+            cd BioSemi
+            system(strcat('BioSemi.exe -c my_config',num2str(cap),'.cfg &'));
+            cd ..
+            disp('Waiting for you to connect the BioSemi to LSL...');
+        end
+        while isempty(Streaminfos)
+            [Streaminfos] = lsl_resolve_all(LibHandle);
+        end
+        disp('The BioSemi is linked to LSL')
     end
-    while isempty(Streaminfos)
-        [Streaminfos] = lsl_resolve_all(LibHandle);
-    end
-    disp('The BioSemi is linked to LSL')
 
     % Open recorder
     cd LabRecorder
@@ -53,10 +58,13 @@ function training_session(previousModel, testedHand, nbTrialsPerHand, crossDelay
     end
 
     %% Visualization
-    vis_stream('BioSemi',10,5,150,1:1+cap+8,100,10);
-    if ~isempty(previousModel)
-        vis_stream('BCI',10,5,150,1,100,10);
+    if ~isTest
+        vis_stream('BioSemi',10,5,150,1:1+cap+8,100,10);
+        if ~isempty(previousModel)
+            vis_stream('BCI',10,5,150,1,100,10);
+        end
     end
+   
 
     %% Experiment
     training(markers,nbTrialsPerHand,crossDelay,arrowDelay,imaginationDelay,restDelay,LibHandle,show_feedback_to_user,predictionFrequency);
