@@ -59,16 +59,21 @@ microf1 = (2 .* microprec .* microsens) ./ (microprec + microsens);
 % Names of the rows
 name = ["true_positive"; "false_positive"; "false_negative"; "true_negative"; ...
     "precision"; "sensitivity"; "specificity"; "accuracy"; "F-measure"];
+
+name = table(name, 'VariableNames', ["name"]);
 % Names of the columns
-varNames = ["name"; "classes"; "macroAVG"; "microAVG"];
+varNames = ["name", "classes", "macroAVG", "microAVG"];
+% Names of the classes
+classes = ["left"; "right"; "rest"];
 % Values of the columns for each class
 values = [tp; fp; fn; tn; prec; sens; spec; repmat(acc, 1, len); f1];
+classes = array2table(values, 'VariableNames', classes);
 % Macro-average
 macroAVG = mean(values, 2);
 % Micro-average
 microAVG = [macroAVG(1:4); microprec; microsens; microspec; microacc; microf1];
 % OUTPUT: final table
-stats = table(name, values, macroAVG, microAVG, 'VariableNames',varNames);
+stats = table(name, classes, macroAVG, microAVG, 'VariableNames',varNames);
 if verbatim
     stats
 end
