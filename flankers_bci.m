@@ -8,7 +8,7 @@ model_path = 'data/models/';
 result_path = 'data/results/';
 resource_path = 'data/resources/';
 
-global_model_file = 'P1_HR_T1_model.mat';
+global_model_file = 'P300_HB_T3_model.mat';
 
 
 % Ask for participant number
@@ -25,9 +25,9 @@ rNeutral = 0.0;
 trials = flankersCloud(rCongruent, rIncongruent, rRandom, rNeutral, nTrials);
 
 cap = 64;
-prediction_frequency = 1;
+prediction_frequency = 0.4;
 
-is_test = true;
+is_test = false;
 
 % BioSemi triggers
 % 120: left good
@@ -69,7 +69,7 @@ if ~is_test
 
     disp("Starting the outlet...");
     [bci_outlet,  opts] = init_outlet_global('GlobalModel',global_file.model, 'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','mode','UpdateFrequency',prediction_frequency);
-    
+
     disp('Initializing the robotic hands...');
     hands = init_hands();
     run_readlsl('new_stream', 'BioSemi','marker_query', '');
@@ -84,7 +84,6 @@ if ~is_test
     'Verbose',opts.verbose, ...
     'StartDelay',0,...
     'EmptyResultValue',[]);
-
 
 end
 
@@ -119,7 +118,7 @@ black = BlackIndex(0);
 grey = white / 2;
 % Open the screen
 Screen('Preference', 'SkipSyncTests', 0);
-[window, windowRect] = PsychImaging('OpenWindow', 2, grey);
+[window, windowRect] = PsychImaging('OpenWindow', 1, grey);
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 
 
@@ -145,7 +144,7 @@ flanker_duration = round(0.2/ifi);
 decision_duration = round(5/ifi);
 check_decision_duration = round(2/ifi);
 feedback_duration = round(1/ifi);
-press_duration = 4;
+press_duration = 8;
 afterTrialInterval = round(2/ifi);
 
 % Set up the timing
@@ -190,10 +189,7 @@ level_up = Screen('MakeTexture', window, img);
 DrawFormattedText(window, 'Press any key to start', 'center', 'center', white);
 Screen('Flip', window);
 KbStrokeWait;
-% Activate robotic hands
-if ~is_test
-    activate(hands);
-end
+
 vbl = Screen('Flip', window); % initial flip
 % Run the flankers tasks
 error_rate = 0.0;
@@ -208,8 +204,9 @@ for trial = 1:nTrials
         Screen('DrawTexture', window, level_up, [],[],0);
         vbl = Screen('Flip', window, vbl + (level_up_duration - 0.5) * ifi);
     end
+    disp(level);
     % Fixation cross and level
-    DrawFormattedText(window, strcat("Level ", num2str(level)), 'center', height*0.1, white);
+    % DrawFormattedText(window, strcat("Level ", num2str(level)), 'center', height*0.1, white);
     Screen('DrawTexture', window, cross, [],[],0);
     
 
@@ -266,12 +263,12 @@ for trial = 1:nTrials
             Screen('DrawTexture', window, neutral_arrow, [], [positions(j, 1)-arrowSizes(j)/2, positions(j, 2)-arrowSizes(j)/2, positions(j, 1)+arrowSizes(j)/2, positions(j, 2)+arrowSizes(j)/2], 0, [], contrasts(j));
         end
     end
-    
+
     % Send stimulus trigger
     trigger_outlet.push_sample({'stim'});
 
     vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
-    
+
     % Wait for the hand activation
     Screen('FillRect', window, grey);
     vbl = Screen('Flip', window, vbl + (flanker_duration - 0.5) * ifi);
@@ -282,7 +279,9 @@ for trial = 1:nTrials
         height * 0.50, white);
     
     vbl = Screen('Flip', window, vbl + (flanker_duration - 0.5) * ifi);
-
+    if ~is_test
+        activate(hands);
+    end
     tStart=GetSecs;
     response = 0;
     while GetSecs-tStart<press_duration
@@ -306,7 +305,18 @@ for trial = 1:nTrials
             end
         end
     end
-
+    result = readline(hands);
+    result = slice(result,[1,length(result)-1])
+    disp('pulling from hand');
+    disp(result);
+    if result == "left"
+        response = 1;
+    elseif result == "right"
+        response = 2;
+    else 
+        response = 3;
+    end
+    disp('displayed result');
     % Send triggers
     if response==1
         if arrowDirections(1)==1
@@ -417,9 +427,6 @@ for trial = 1:nTrials
     data(trial, 3) = arrowDirections(1);
     data(trial, 4) = outcome;
     
-    if ~is_test
-        activate(hands);
-    end
 end
 
 % save the data

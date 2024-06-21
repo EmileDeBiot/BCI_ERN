@@ -7,9 +7,8 @@ model_path = 'data/models/';
 result_path = 'data/results/';
 resource_path = 'data/resources/';
 
-prediction_frequency = 1;
 
-is_test = true;
+is_test = false;
 
 % BioSemi triggers (not used at the moment)
 % 120: left good
@@ -49,8 +48,6 @@ if ~is_test
     end
     disp('The BioSemi is linked to LSL');
 
-    %% Visualization
-    vis_stream('BioSemi',10,5,150,1:1+cap+8,100,10);
 
 end
 
@@ -68,9 +65,9 @@ rightKey=KbName('RightArrow');
 
 % PTB setup for flankersCloud task
 
-Screen('Preference', 'SkipSyncTests', 2);
+Screen('Preference', 'SkipSyncTests', 0);
 
-opacity = 0.9;
+opacity = 1;
 PsychDebugWindowConfiguration([], opacity)
 
 % Initialize grey
@@ -78,7 +75,7 @@ white = WhiteIndex(0);
 black = BlackIndex(0);
 grey = white / 2;
 % Open the screen
-[window, windowRect] = PsychImaging('OpenWindow', 2, grey);
+[window, windowRect] = PsychImaging('OpenWindow', 1, grey);
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 
 
@@ -169,8 +166,11 @@ for trial = 1:nTrials
         Screen('DrawTexture', window, level_up, [],[],0);
         vbl = Screen('Flip', window, vbl + (level_up_duration - 0.5) * ifi);
     end
+    disp(level);
     % Fixation cross and level
-    DrawFormattedText(window, strcat("Level ", num2str(level)), 'center', height*0.1, white);
+    % level_str = strcat("Level ", num2str(level));
+    % DrawFormattedText(window, level_str, 'center',...
+    %     height * 0.1, white);
     Screen('DrawTexture', window, cross, [],[],0);
     
     nArrows = randi([8,15]);
