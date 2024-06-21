@@ -104,7 +104,8 @@ function open_window_1(params)
                                      eFiles, ...
                                      eFile, ...
                                      eModelFile,...
-                                     eOtherFile});
+                                     eOtherFile,...
+                                     eIsTest});
 
     bGetOnlineAccuracy = uibutton(f, 'push', 'Text', 'Get Online Accuracy', 'Position', [480, 5, 120, 20]);
     set(bGetOnlineAccuracy, 'ButtonPushedFcn', {@cbGetOnlineAccuracy, ...
@@ -205,11 +206,11 @@ function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCros
     end
     params.predictionFrequency = num;
     
-    params.ID = char(get(eID, 'Value'));
-    if isempty(regexp(params.ID, '^P\d+_H[RLB]_T\d+$', 'once'))
-        disp('Wrong format d''[ID]. Use this format ''Px_Hy_Tz''');
-        return;
-    end
+    % params.ID = char(get(eID, 'Value'));
+    % if isempty(regexp(params.ID, '^P\d+_H[RLB]_T\d+$', 'once'))
+    %     disp('Wrong format d''[ID]. Use this format ''Px_Hy_Tz''');
+    %     return;
+    % end
     
     params.previousModel = string(get(ePreviousModel, 'Value'));
     if get(bRight, 'Value')
@@ -254,7 +255,7 @@ function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCros
     open_window_1(params);
 end
 
-function cbTrainingModel(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossDelay, eArrowDelay, eImaginationDelay, eRestDelay, ePredictionFrequency, bRight, bLeft, bBoth, eFiles, eFile, eModelFile, eOtherFile)
+function cbTrainingModel(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossDelay, eArrowDelay, eImaginationDelay, eRestDelay, ePredictionFrequency, bRight, bLeft, bBoth, eFiles, eFile, eModelFile, eOtherFile, eIsTest)
     data_path = 'data/data/';
     model_path = 'data/models/';
     % Verification
@@ -320,7 +321,7 @@ function cbTrainingModel(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossD
     % Incrementation of the training number
     params.ID = strrep(params.ID, ['T', num2str(zValue)], ['T', num2str(zValue + 1)]);
  
-    
+    params.isTest = eIsTest;
     open_window_1(params);
 end
 function cbGetOnlineAccuracy(~, ~, ePreviousModel, eFile)
@@ -356,10 +357,10 @@ function cbUpdate(~, ~, eID, ePreviousModel, bRight, bLeft, bBoth, eFiles, eFile
     data_path = 'data/data/';
     model_path = 'data/models/';
     params.ID = char(get(eID, 'Value'));
-    if isempty(regexp(params.ID, '^P\d+_H[RLB]_T\d+$', 'once'))
-        disp('Wrong format d''[ID]. Use this format ''Px_Hy_Tz''');
-        return;
-    end
+    % if isempty(regexp(params.ID, '^P\d+_H[RLB]_T\d+$', 'once'))
+    %     disp('Wrong format d''[ID]. Use this format ''Px_Hy_Tz''');
+    %     return;
+    % end
     
     % Update the file list
     matchResult = regexp(params.ID, '.*_.*_T(\d+)', 'tokens');
