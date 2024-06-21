@@ -15,10 +15,10 @@ function test_activation()
     write(hands, 'c', "char"); % Checks if the hands are activated
     disp(readline(hands))
     action(hands, 1);
-    pause(1);
+    pause(1);  
     action(hands, 2);
     clear hands;
-end
+end 
 
 
 

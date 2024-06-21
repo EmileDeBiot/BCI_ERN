@@ -48,7 +48,7 @@ function training(markers,nbtrials_per_marker,cross_delay,arrow_delay,imaginatio
     % Graphics settings
     
     % Here we call some default settings for setting up Psychtoolbox
-    Screen('Preference', 'SkipSyncTests', 2);
+    Screen('Preference', 'SkipSyncTests', 1);
     PsychDefaultSetup(2);
     % Get the screen numbers
     screens = Screen('Screens');

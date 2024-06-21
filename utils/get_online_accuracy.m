@@ -7,10 +7,10 @@ function get_online_accuracy(data_file, model_file)
     
     disp(model_file)
     init_bci_lab();
-    data = exp_eval(io_loadset(strcat(data_path,data_file,'.xdf')));
+    data = io_loadset(strcat(data_path,data_file,'.xdf'));
     model = utl_loadmodel(strcat(model_path, model_file, '.mat'));
     [predictions,loss,stats,targets] = bci_predict(model, data, 'Format', 'mode');
-
+    disp(predictions);
     % Compute confusion matrix and F1 score
     confusion_matrix = confusionmat(targets, predictions);
     statsOfMeasure(confusion_matrix,1);

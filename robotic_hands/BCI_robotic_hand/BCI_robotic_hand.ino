@@ -6,10 +6,10 @@
 #define num_servo 2
 // ************************************* To tune if hands have changed  ******************************* //
 int servpinright = 4;
-int servpinleft = 13;
+int servpinleft = 8;
 int up_angle[num_servo]={140,140};
 int low_angle[num_servo]={30,50};
-int push_angle[num_servo] ={60,60};
+int push_angle[num_servo] ={115,90};
 
 Servo servoR = Servo();
 Servo servoL = Servo();
@@ -23,7 +23,7 @@ void setup()
 {
   Serial.begin(115200);  delay(1000);
   Serial.println("Connection created");
-  //test(); // tests if the servos are working and the parameters are correct
+  // test(); // tests if the servos are working and the parameters are correct
 }
 
 void loop() {
@@ -64,11 +64,13 @@ void actuateFinger(int cmd)
     servoL.write(push_angle[0]);
     delay(800);
     servoL.write(up_angle[0]);
+    Serial.println("left");
   }
   else if (cmd == 'r'){
     servoR.write(push_angle[1]);
     delay(800);
     servoR.write(up_angle[1]);
+    Serial.println("right");
   }
 }
 
