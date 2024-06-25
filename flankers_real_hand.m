@@ -209,10 +209,11 @@ for trial = 1:nTrials
     else
         contrasts = ones(1,nArrows);
     end
-    % Send cross trigger
-    trigger_outlet.push_sample({'cross'});
+
     % Display the cross
     vbl = Screen('Flip', window, vbl + (afterTrialInterval - 0.5) * ifi);
+    % Send cross trigger
+    trigger_outlet.push_sample({'cross'});
 
     % Flanker stimuli
     for j=1:nArrows
@@ -343,10 +344,11 @@ for trial = 1:nTrials
             height * 0.50, white);
     end
     
+
+    vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
     % Send trigger for feedback
     trigger_outlet.push_sample({'feedback'});
-    vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
-
+    
     % Show the arrows and circle the biggest one
     for j=1:nArrows
         if arrowDirections(j)==1

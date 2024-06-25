@@ -249,9 +249,10 @@ for trial = 1:nTrials
     else
         contrasts = ones(1,nArrows);
     end
+
+    vbl = Screen('Flip', window, vbl + (afterTrialInterval - 0.5) * ifi);
     % Send cross trigger
     trigger_outlet.push_sample({'cross'});
-    vbl = Screen('Flip', window, vbl + (afterTrialInterval - 0.5) * ifi);
 
     % Flanker stimuli
     for j=1:nArrows
@@ -264,10 +265,11 @@ for trial = 1:nTrials
         end
     end
 
-    % Send stimulus trigger
-    trigger_outlet.push_sample({'stim'});
+
 
     vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
+    % Send stimulus trigger
+    trigger_outlet.push_sample({'stim'});
 
     % Wait for the hand activation
     Screen('FillRect', window, grey);
@@ -404,10 +406,11 @@ for trial = 1:nTrials
             height * 0.50, white);
     end
     
+
+    vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
     % Send trigger for feedback
     trigger_outlet.push_sample({'feedback'});
-    vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
-
+    
     %% Show the arrows and circle the biggest one
     for j=1:nArrows
         if arrowDirections(j)==1
