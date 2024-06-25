@@ -9,6 +9,7 @@ result_path = 'data/results/';
 resource_path = 'data/resources/';
 
 global_model_file = 'P300_HB_T3_model.mat';
+global_model_file = 'P300_HB_T3_model.mat';
 
 
 % Ask for participant number
@@ -25,6 +26,7 @@ rNeutral = 0.0;
 trials = flankersCloud(rCongruent, rIncongruent, rRandom, rNeutral, nTrials);
 
 cap = 64;
+prediction_frequency = 0.4;
 prediction_frequency = 0.4;
 
 is_test = false;
@@ -70,6 +72,7 @@ if ~is_test
     disp("Starting the outlet...");
     [bci_outlet,  opts] = init_outlet_global('GlobalModel',global_file.model, 'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','mode','UpdateFrequency',prediction_frequency);
 
+
     disp('Initializing the robotic hands...');
     hands = init_hands();
     run_readlsl('new_stream', 'BioSemi','marker_query', '');
@@ -96,7 +99,7 @@ disp('Marker stream initialized');
 cd LabRecorder
 system('LabRecorder.exe -c my_config.cfg &');
 cd ..;
-pause(20);
+pause(5);
 
 
 % Set up the keyboard
@@ -109,7 +112,7 @@ rightKey=KbName('RightArrow');
 
 Screen('Preference', 'SkipSyncTests', 0);
 
-opacity = 1;
+opacity = 0.8;
 PsychDebugWindowConfiguration([], opacity)
 
 % Initialize grey
@@ -118,7 +121,7 @@ black = BlackIndex(0);
 grey = white / 2;
 % Open the screen
 Screen('Preference', 'SkipSyncTests', 0);
-[window, windowRect] = PsychImaging('OpenWindow', 1, grey);
+[window, windowRect] = PsychImaging('OpenWindow', 0, grey);
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 
 
@@ -144,6 +147,7 @@ flanker_duration = round(0.2/ifi);
 decision_duration = round(5/ifi);
 check_decision_duration = round(2/ifi);
 feedback_duration = round(1/ifi);
+press_duration = 8;
 press_duration = 8;
 afterTrialInterval = round(2/ifi);
 
@@ -190,6 +194,7 @@ DrawFormattedText(window, 'Press any key to start', 'center', 'center', white);
 Screen('Flip', window);
 KbStrokeWait;
 
+
 vbl = Screen('Flip', window); % initial flip
 % Run the flankers tasks
 error_rate = 0.0;
@@ -206,7 +211,7 @@ for trial = 1:nTrials
     end
     disp(level);
     % Fixation cross and level
-    % DrawFormattedText(window, strcat("Level ", num2str(level)), 'center', height*0.1, white);
+    DrawFormattedText(window, ['Level' ' ' num2str(level)], 'center', height*0.1, white);
     Screen('DrawTexture', window, cross, [],[],0);
     
 
@@ -249,9 +254,10 @@ for trial = 1:nTrials
     else
         contrasts = ones(1,nArrows);
     end
+
+    vbl = Screen('Flip', window, vbl + (afterTrialInterval - 0.5) * ifi);
     % Send cross trigger
     trigger_outlet.push_sample({'cross'});
-    vbl = Screen('Flip', window, vbl + (afterTrialInterval - 0.5) * ifi);
 
     % Flanker stimuli
     for j=1:nArrows
@@ -264,10 +270,11 @@ for trial = 1:nTrials
         end
     end
 
-    % Send stimulus trigger
-    trigger_outlet.push_sample({'stim'});
+
 
     vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
+    % Send stimulus trigger
+    trigger_outlet.push_sample({'stim'});
 
     % Wait for the hand activation
     Screen('FillRect', window, grey);
@@ -279,6 +286,9 @@ for trial = 1:nTrials
         height * 0.50, white);
     
     vbl = Screen('Flip', window, vbl + (flanker_duration - 0.5) * ifi);
+    if ~is_test
+        activate(hands);
+    end
     if ~is_test
         activate(hands);
     end
@@ -305,18 +315,20 @@ for trial = 1:nTrials
             end
         end
     end
-    result = readline(hands);
-    result = slice(result,[1,length(result)-1])
-    disp('pulling from hand');
-    disp(result);
-    if result == "left"
-        response = 1;
-    elseif result == "right"
-        response = 2;
-    else 
+    if ~is_test
+        result = readline(hands);
+        disp(result);
+        if strcmp(result,['left' newline])
+            response = 1;
+        elseif strcmp(result,['right' newline])
+            response = 2;
+        else 
+            response = 3;
+        end
+    else
         response = 3;
     end
-    disp('displayed result');
+
     % Send triggers
     if response==1
         if arrowDirections(1)==1
@@ -402,10 +414,11 @@ for trial = 1:nTrials
             height * 0.50, white);
     end
     
+
+    vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
     % Send trigger for feedback
     trigger_outlet.push_sample({'feedback'});
-    vbl = Screen('Flip', window, vbl + (cross_duration - 0.5) * ifi);
-
+    
     %% Show the arrows and circle the biggest one
     for j=1:nArrows
         if arrowDirections(j)==1
