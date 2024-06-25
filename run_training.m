@@ -206,11 +206,11 @@ function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCros
     end
     params.predictionFrequency = num;
     
-    % params.ID = char(get(eID, 'Value'));
-    % if isempty(regexp(params.ID, '^P\d+_H[RLB]_T\d+$', 'once'))
-    %     disp('Wrong format d''[ID]. Use this format ''Px_Hy_Tz''');
-    %     return;
-    % end
+    params.ID = char(get(eID, 'Value'));
+    if isempty(regexp(params.ID, '^P\d+_H[RLB]_T\d+$', 'once'))
+        disp('Wrong format d''[ID]. Use this format ''Px_Hy_Tz''');
+        return;
+    end
     
     params.previousModel = string(get(ePreviousModel, 'Value'));
     if get(bRight, 'Value')

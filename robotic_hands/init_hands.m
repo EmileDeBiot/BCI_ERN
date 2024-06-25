@@ -10,5 +10,5 @@ function hands = init_hands()
     baudrate = config.baudrate;
 
     % Connect to the hands
-    hands = serialport(com, baudrate);
+    hands = serialport(com, baudrate, 'Timeout', 1);
 end

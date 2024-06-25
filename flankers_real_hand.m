@@ -8,7 +8,7 @@ result_path = 'data/results/';
 resource_path = 'data/resources/';
 
 
-is_test = false;
+is_test = true;
 
 % BioSemi triggers (not used at the moment)
 % 120: left good
@@ -67,7 +67,7 @@ rightKey=KbName('RightArrow');
 
 Screen('Preference', 'SkipSyncTests', 0);
 
-opacity = 1;
+opacity = 0.8;
 PsychDebugWindowConfiguration([], opacity)
 
 % Initialize grey
@@ -75,7 +75,7 @@ white = WhiteIndex(0);
 black = BlackIndex(0);
 grey = white / 2;
 % Open the screen
-[window, windowRect] = PsychImaging('OpenWindow', 1, grey);
+[window, windowRect] = PsychImaging('OpenWindow', 0, grey);
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 
 
