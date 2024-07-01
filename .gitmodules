@@ -2,3 +2,6 @@
 	path = BCILAB
 	url = https://github.com/sccn/BCILAB.git
 	ignore = dirty
+[submodule "BCI_ERN_data_analysis"]
+	path = BCI_ERN_data_analysis
+	url = https://github.com/EmileDeBiot/BCI_ERN_data_analysis.git
