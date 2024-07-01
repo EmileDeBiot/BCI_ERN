@@ -8,7 +8,8 @@ model_path = 'data/models/';
 result_path = 'data/results/';
 resource_path = 'data/resources/';
 
-global_model_file = 'P300_HB_T3_model.mat';
+
+global_model_file = 'P6661_HB_T4_model.mat';
 
 
 % Ask for participant number
@@ -17,7 +18,7 @@ participant_number = input('Participant number: ', 's');
 filename = strcat(result_path, 'P_', participant_number, '.mat');
 
 % Generate the flanker stimuli
-nTrials = 10;
+nTrials = 30;
 rCongruent = 0.05;
 rIncongruent = 0.45;
 rRandom = 0.5;
@@ -27,7 +28,7 @@ trials = flankersCloud(rCongruent, rIncongruent, rRandom, rNeutral, nTrials);
 cap = 64;
 prediction_frequency = 0.4;
 
-is_test = true;
+is_test = false;
 
 % BioSemi triggers
 % 120: left good
@@ -69,6 +70,7 @@ if ~is_test
 
     disp("Starting the outlet...");
     [bci_outlet,  opts] = init_outlet_global('GlobalModel',global_file.model, 'SourceStream','BioSemi','LabStreamName','BCI','OutputForm','mode','UpdateFrequency',prediction_frequency);
+
 
     disp('Initializing the robotic hands...');
     hands = init_hands();
@@ -145,6 +147,7 @@ decision_duration = round(5/ifi);
 check_decision_duration = round(2/ifi);
 feedback_duration = round(1/ifi);
 press_duration = 8;
+press_duration = 8;
 afterTrialInterval = round(2/ifi);
 
 % Set up the timing
@@ -189,6 +192,7 @@ level_up = Screen('MakeTexture', window, img);
 DrawFormattedText(window, 'Press any key to start', 'center', 'center', white);
 Screen('Flip', window);
 KbStrokeWait;
+
 
 vbl = Screen('Flip', window); % initial flip
 % Run the flankers tasks
@@ -284,6 +288,9 @@ for trial = 1:nTrials
     if ~is_test
         activate(hands);
     end
+    if ~is_test
+        activate(hands);
+    end
     tStart=GetSecs;
     response = 0;
     while GetSecs-tStart<press_duration
@@ -308,11 +315,15 @@ for trial = 1:nTrials
         end
     end
     if ~is_test
-        result = readline(hands);
-        disp(result);
-        if strcmp(result,['left' newline])
+        buffer = readline(hands);
+        if isempty(buffer)
+            result = ['bonjour' 'le monde'];
+        else 
+            result = splitlines(buffer);
+        end
+        if strcmp(result(1),'left')
             response = 1;
-        elseif strcmp(result,['right' newline])
+        elseif strcmp(result(1),'right')
             response = 2;
         else 
             response = 3;
@@ -432,6 +443,7 @@ for trial = 1:nTrials
     data(trial, 3) = arrowDirections(1);
     data(trial, 4) = outcome;
     
+    flush(hands);
 end
 
 % save the data
