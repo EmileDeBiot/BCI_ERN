@@ -49,3 +49,10 @@ You can use this button to let the participant use freely the robotic hands.
 Run flankers_real_hand to start the real hand experimentation. Check the parameters at the beginning of the file.
 
 Run flankers_bci to start the real hand experimentation. Check the parameters at the beginning of the file.
+
+SETUP:
+
+EX1, EX2 : mastoids (left, right)
+EX3, EX4: Left arm
+EX5, EX6: right arm
+EX7, EX8: eyes
