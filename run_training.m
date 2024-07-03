@@ -207,7 +207,7 @@ function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCros
     params.predictionFrequency = num;
     
     params.ID = char(get(eID, 'Value'));
-    if isempty(regexp(params.ID, '^P\d+_H[RLB]_T\d+$', 'once'))
+    if isempty(regexp(params.ID, '^P([A-Z]|\d)+_H([RLB])_T\d+$', 'once'))
         disp('Wrong format d''[ID]. Use this format ''Px_Hy_Tz''');
         return;
     end
@@ -383,7 +383,7 @@ function cbUpdate(~, ~, eID, ePreviousModel, bRight, bLeft, bBoth, eFiles, eFile
     set(eFiles, 'Value', params.files);
 
     % Update the tested hand
-    matchResult = regexp(params.ID, 'P\d+_H([RLB])_T\d+', 'tokens');
+    matchResult = regexp(params.ID, 'P([A-Z]|\d)+_H([RLB])_T\d+', 'tokens');
     if ~isempty(matchResult)
         yValue = matchResult{1}{1};
     else
