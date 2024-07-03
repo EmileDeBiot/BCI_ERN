@@ -60,7 +60,7 @@ function training(markers,nbtrials_per_marker,cross_delay,arrow_delay,imaginatio
     % Define black and white (white will be 1 and black 0). This is because
     % in general luminace values are defined between 0 and 1 with 255 steps in
     % between. All values in Psychtoolbox are defined between 0 and 1
-    screenNumber = 0;
+    screenNumber = 1;
     white = WhiteIndex(screenNumber);
     black = BlackIndex(screenNumber);
     % Do a simply calculation to calculate the luminance value for grey. This
@@ -70,7 +70,7 @@ function training(markers,nbtrials_per_marker,cross_delay,arrow_delay,imaginatio
     % In the lab monitors are inverted so we are going to use 1 for the
     % moment (hope I will be authorized to change this)
     
-    opacity = 0.8;
+    opacity = 1;
     PsychDebugWindowConfiguration([], opacity);
     [window, windowRect] = PsychImaging('OpenWindow', screenNumber, grey);
     % Get the size of the on screen window

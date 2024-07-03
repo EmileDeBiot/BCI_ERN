@@ -9,7 +9,7 @@ result_path = 'data/results/';
 resource_path = 'data/resources/';
 
 
-global_model_file = 'P6661_HB_T4_model.mat';
+global_model_file = 'P9FH_HB_T3_model.mat';
 
 
 % Ask for participant number
@@ -18,7 +18,7 @@ participant_number = input('Participant number: ', 's');
 filename = strcat(result_path, 'P_', participant_number, '.mat');
 
 % Generate the flanker stimuli
-nTrials = 30;
+nTrials = 60;
 rCongruent = 0.05;
 rIncongruent = 0.45;
 rRandom = 0.5;
@@ -26,7 +26,7 @@ rNeutral = 0.0;
 trials = flankersCloud(rCongruent, rIncongruent, rRandom, rNeutral, nTrials);
 
 cap = 64;
-prediction_frequency = 0.4;
+prediction_frequency = 0.3;
 
 is_test = false;
 
@@ -111,7 +111,7 @@ rightKey=KbName('RightArrow');
 
 Screen('Preference', 'SkipSyncTests', 0);
 
-opacity = 0.8;
+opacity = 1;
 PsychDebugWindowConfiguration([], opacity)
 
 % Initialize grey
@@ -119,8 +119,7 @@ white = WhiteIndex(0);
 black = BlackIndex(0);
 grey = white / 2;
 % Open the screen
-Screen('Preference', 'SkipSyncTests', 0);
-[window, windowRect] = PsychImaging('OpenWindow', 0, grey);
+[window, windowRect] = PsychImaging('OpenWindow', 1, grey);
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 
 
@@ -146,8 +145,7 @@ flanker_duration = round(0.2/ifi);
 decision_duration = round(5/ifi);
 check_decision_duration = round(2/ifi);
 feedback_duration = round(1/ifi);
-press_duration = 8;
-press_duration = 8;
+press_duration = 6;
 afterTrialInterval = round(2/ifi);
 
 % Set up the timing
@@ -189,9 +187,12 @@ wrong = Screen('MakeTexture', window, img);
 img(:,:,4) = alpha;
 level_up = Screen('MakeTexture', window, img);
 
-DrawFormattedText(window, 'Press any key to start', 'center', 'center', white);
+DrawFormattedText(window, 'Ready?', 'center', 'center', [54,54,54]);
 Screen('Flip', window);
-KbStrokeWait;
+[secs, keyCode, deltaSecs] = KbWait;
+while ~strcmp(strcat(KbName(keyCode)),'Return')
+    [secs, keyCode, deltaSecs] = KbWait; 
+end
 
 
 vbl = Screen('Flip', window); % initial flip
@@ -249,7 +250,7 @@ for trial = 1:nTrials
     if level >= 1 && level <= 4
         contrasts = rand(1,nArrows)+0.3;
     elseif level > 4
-        contrasts = rand(1,n_Arrows)+0.1;
+        contrasts = rand(1,nArrows)+0.1;
     else
         contrasts = ones(1,nArrows);
     end
@@ -288,9 +289,6 @@ for trial = 1:nTrials
     if ~is_test
         activate(hands);
     end
-    if ~is_test
-        activate(hands);
-    end
     tStart=GetSecs;
     response = 0;
     while GetSecs-tStart<press_duration
@@ -315,7 +313,9 @@ for trial = 1:nTrials
         end
     end
     if ~is_test
-        buffer = readline(hands);
+        for l = 1:floor(press_duration*prediction_frequency)
+            buffer = readline(hands);
+        end
         if isempty(buffer)
             result = ['bonjour' 'le monde'];
         else 
@@ -331,7 +331,9 @@ for trial = 1:nTrials
     else
         response = 3;
     end
-
+    if ~is_test
+        deactivate(hands);
+    end
     % Send triggers
     if response==1
         if arrowDirections(1)==1
@@ -376,10 +378,7 @@ for trial = 1:nTrials
         Screen('DrawTexture', window, arrow, [], [width/2 + 200, height * 0.25 - 75, width/2+300, height * 0.25 + 25]);
     end
     Screen('Flip', window, vbl + (decision_duration - 0.5) * ifi);
-    
-    if ~is_test
-        deactivate(hands);
-    end
+
 
     while true
         [keyIsDown, tEnd, keyCode]=KbCheck;
@@ -463,6 +462,6 @@ function error_rate = update_error_rate(error_rate, data, trial)
     elseif trial <= 11
         error_rate = (error_rate*(trial-2) + 1*(1-(data(trial-1,2) == data(trial-1, 3))))/(trial-1);
     else
-        error_rate = (error_rate*(trial-2) - 1*(1-(data(trial - 11, 2) == data(trial-11,3))) + 1*(1-(data(trial-1,2) == data(trial-1, 3))))/(trial-1);
+        error_rate = (error_rate*10 - 1*(1-(data(trial - 11, 2) == data(trial-11,3))) + 1*(1-(data(trial-1,2) == data(trial-1, 3))))/10;
     end 
  end

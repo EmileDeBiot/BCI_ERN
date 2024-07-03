@@ -8,7 +8,7 @@ result_path = 'data/results/';
 resource_path = 'data/resources/';
 
 
-is_test = true;
+is_test = false;
 
 % BioSemi triggers (not used at the moment)
 % 120: left good
@@ -28,7 +28,7 @@ LibHandle = lsl_loadlib();
 % Ask for participant number
 participant_number = input('Participant number: ', 's');
 
-filename = strcat(result_path, 'P_', participant_number, '.mat');
+filename = strcat(result_path, 'P_', participant_number,'_RealH', '.mat');
 
 % Initialize the marker stream
 info = lsl_streaminfo(LibHandle,'MyMarkerStream','Markers',1,0,'cf_string','myuniquesourceid23443');
@@ -67,7 +67,7 @@ rightKey=KbName('RightArrow');
 
 Screen('Preference', 'SkipSyncTests', 0);
 
-opacity = 0.8;
+opacity = 1;
 PsychDebugWindowConfiguration([], opacity)
 
 % Initialize grey
@@ -75,7 +75,7 @@ white = WhiteIndex(0);
 black = BlackIndex(0);
 grey = white / 2;
 % Open the screen
-[window, windowRect] = PsychImaging('OpenWindow', 0, grey);
+[window, windowRect] = PsychImaging('OpenWindow', 1, grey);
 Screen('BlendFunction', window, 'GL_SRC_ALPHA', 'GL_ONE_MINUS_SRC_ALPHA');
 
 
@@ -109,7 +109,7 @@ rCongruent = 0.05;
 rIncongruent = 0.45;
 rRandom = 0.5;
 rNeutral = 0.0;
-nTrials = 25;
+nTrials = 60;
 trials = flankersCloud(rCongruent, rIncongruent, rRandom, rNeutral, nTrials);
 
 % Set up the timing
@@ -151,10 +151,12 @@ wrong = Screen('MakeTexture', window, img);
 img(:,:,4) = alpha;
 level_up = Screen('MakeTexture', window, img);
 
-
-DrawFormattedText(window, 'Press any key to start', 'center', 'center', white);
+DrawFormattedText(window, 'Ready?', 'center', 'center', [54,54,54]);
 Screen('Flip', window);
-KbStrokeWait;
+[secs, keyCode, deltaSecs] = KbWait;
+while ~strcmp(strcat(KbName(keyCode)),'Return')
+    [secs, keyCode, deltaSecs] = KbWait; 
+end
 vbl = Screen('Flip', window); % initial flip
 % Run the flankers tasks
 error_rate = 0.0;
@@ -205,7 +207,7 @@ for trial = 1:nTrials
     if level >= 1 && level <= 4
         contrasts = rand(1,nArrows)+0.3;
     elseif level > 4
-        contrasts = rand(1,n_Arrows)+0.1;
+        contrasts = rand(1,nArrows)+0.1;
     else
         contrasts = ones(1,nArrows);
     end
