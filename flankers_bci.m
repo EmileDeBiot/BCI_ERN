@@ -313,20 +313,23 @@ for trial = 1:nTrials
         end
     end
     if ~is_test
+        buffers = [];
         for l = 1:floor(press_duration*prediction_frequency)
             buffer = readline(hands);
+            if ~isempty(buffer)
+                buffers = [buffers buffer];
+            end
         end
-        if isempty(buffer)
-            result = ['bonjour' 'le monde'];
-        else 
-            result = splitlines(buffer);
-        end
-        if strcmp(result(1),'left')
-            response = 1;
-        elseif strcmp(result(1),'right')
-            response = 2;
-        else 
-            response = 3;
+        response = 3;
+        if ~isempty(buffers)
+            for k = 1:length(buffers)        
+                result = splitlines(buffers(k));
+                if strcmp(result(1),'left')
+                    response = 1;
+                elseif strcmp(result(1),'right')
+                    response = 2;
+                end
+            end
         end
     else
         response = 3;
