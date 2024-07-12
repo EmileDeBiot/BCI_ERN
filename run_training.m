@@ -70,7 +70,7 @@ function open_window_1(params)
         vbBoth = true;
     end
 
-    % Creating checkboxees
+    % Creating checkboxes
     eIsTest = uicontrol(f,'Style', 'checkbox', "Position", [220, 160, 80, 20], 'Value', params.isTest);
     
     bRight      = uiradiobutton(bTestedHand, 'Position', [5, 38, 70, 19], 'Text', 'Right', 'Value', vbRight);
@@ -222,7 +222,7 @@ function cbTrainingSession(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCros
     end
 
     params.isTest = get(eIsTest, 'Value');
-    disp(params.isTest);
+
     
     
     params.file                    = get(eFile, 'Value');
@@ -283,6 +283,7 @@ function cbTrainingModel(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossD
     params.file                    = get(eFile, 'Value');
     params.modelFile               = get(eModelFile, 'Value');
     params.otherFile               = get(eOtherFile, 'Value');
+    params.isTest = get(eIsTest, 'Value');
 
     
     close(f);
@@ -321,7 +322,6 @@ function cbTrainingModel(~, ~, f, eID, ePreviousModel, eNbTrialsPerHand, eCrossD
     % Incrementation of the training number
     params.ID = strrep(params.ID, ['T', num2str(zValue)], ['T', num2str(zValue + 1)]);
  
-    params.isTest = eIsTest;
     open_window_1(params);
 end
 function cbGetOnlineAccuracy(~, ~, ePreviousModel, eFile)
