@@ -34,11 +34,11 @@ Only then will the training paradigm start.
 
 3. Training model
 
-If you have created all the data files you want or if you want to make the hand move during the training (will use more computing time because there is no way to fine tune a model with a new piece of data in the toolbox used), you can click on training model. This function will concatenate all data files and train a signal processing classification model.
+If you have created all the data files you want or if you want to make the hand move during the training (will use more computing time because there is no way to fine tune a model with a new piece of data in the toolbox used), you can click on training model. This function will concatenate all data files and train a signal processing classification model. It uses the FBCSP approach and takes into account a 2 second time-window after the marker.
 
 4. Get Online Accuracy
 
-When a model is trained, you can test its accuracy on a given data file.
+When a model is trained, you can test its accuracy on a given data file. It plots the confusion matrix and the resulting F-score for each class (left, right, rest).
 
 5. Feedback session
 
@@ -52,7 +52,14 @@ Run flankers_bci to start the real hand experimentation. Check the parameters at
 
 SETUP:
 
-EX1, EX2 : mastoids (left, right)
+EX1, EX2: mastoids (left, right)
 EX3, EX4: Left arm
 EX5, EX6: right arm
 EX7, EX8: eyes
+
+
+## Common bugs
+
+An error can occur if BCILAB wasn't rerun for a long time. (There is a dot error with a path function) To resolve this bug, go into the BCILAB folder an run bcilab.m. This will restart BCILAB.
+
+If there are not enough markers from a specific class in a xdf file you want to train a model on. BCILAB can throw an error that doesn't explain why it doesn't work. To resolve this bug you should add more trials and markers or remove one class from your training approach.
